@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mtugo Hotel - Order Confirmed</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #faf8f5;
+            color: #2c2c2c;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .top-bar {
+            background: linear-gradient(135deg, #0b1a2e 0%, #1a2f3f 50%, #2a4a5a 100%);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-bar h1 { font-size: 1.4em; font-weight: 300; }
+        .top-bar h1 span { font-weight: 700; color: #d4af37; }
+        .top-bar a { color: #c9d4d9; text-decoration: none; font-size: 0.95em; }
+        .container { flex: 1; max-width: 600px; margin: 40px auto; padding: 0 20px; width: 100%; }
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+            padding: 40px 32px;
+            text-align: center;
+        }
+        .icon {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            background: #e8f7ee;
+            color: #2e9e5b;
+            font-size: 2.2em;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+        }
+        h2 { color: #1a2f3f; font-size: 1.5em; margin-bottom: 8px; }
+        .subtitle { color: #666; margin-bottom: 28px; }
+        .summary-row {
+            display: flex; justify-content: space-between;
+            padding: 10px 0; border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+        .summary-row .label { color: #666; }
+        .summary-row .value { font-weight: 600; color: #1a2f3f; }
+        .receipt {
+            margin-top: 20px;
+            background: #f7f9fc;
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 0.9em;
+            color: #2a4a5a;
+        }
+        .btn-home {
+            display: inline-block;
+            margin-top: 28px;
+            padding: 14px 32px;
+            background: #d4af37;
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+        .btn-home:hover { background: #c4a030; }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <h1>Mtugo <span>Hotel</span></h1>
+        <a href="/">Back to Menu</a>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <div class="icon">&#10003;</div>
+            <h2>Order Confirmed!</h2>
+            <p class="subtitle">Your payment went through - we'll have it ready for you.</p>
+
+            <div class="summary-row">
+                <span class="label">Order #</span>
+                <span class="value" th:text="${order.id}">1</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Meal</span>
+                <span class="value" th:text="${meal.name}">Meal Name</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Quantity</span>
+                <span class="value" th:text="${order.quantity}">1</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Amount Paid</span>
+                <span class="value">KSH <span th:text="${order.totalAmount}">1.00</span></span>
+            </div>
+            <div class="summary-row" th:if="${order.expectedReadyAt}">
+                <span class="label">Ready By</span>
+                <span class="value" th:text="${#temporals.format(order.expectedReadyAt, 'HH:mm')}">--:--</span>
+            </div>
+
+            <div class="receipt" th:if="${order.checkoutRequestId}">
+                Show this screen at the counter to collect your order.
+            </div>
+
+            <a href="/" class="btn-home">Order Something Else</a>
+        </div>
+    </main>
+</body>
+</html>
