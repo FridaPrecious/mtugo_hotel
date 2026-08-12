@@ -1,19 +1,21 @@
 package com.mtugo.mtugo_hotel.service;
 
-import com.mtugo.mtugo_hotel.dto.CartDTO;
-import com.mtugo.mtugo_hotel.dto.CartItemDTO;
+import com.mtugo.mtugo_hotel.dto.OrderRequest;
+import com.mtugo.mtugo_hotel.dto.OrderResponse;
 import com.mtugo.mtugo_hotel.entity.Meal;
 import com.mtugo.mtugo_hotel.entity.Order;
 import com.mtugo.mtugo_hotel.entity.OrderStatus;
 import com.mtugo.mtugo_hotel.repository.MealRepository;
 import com.mtugo.mtugo_hotel.repository.OrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class OrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     private final OrderRepository orderRepository;
     private final MealRepository mealRepository;
@@ -24,46 +26,39 @@ public class OrderService {
         this.mealRepository = mealRepository;
     }
 
-    /**
-     * Creates a single order with multiple order items from the cart.
-     * For now, this is a minimal implementation that saves the order.
-     * Later, you'll add payment integration and transaction handling.
-     */
-    public Order createOrderFromCart(CartDTO cart, String customerPhone) {
-        // For now, we only support one meal per order? Actually we need to handle multiple.
-        // But the Order entity currently has a single meal_id, not a collection.
-        // That means our data model doesn't support multiple items per order yet!
-        // To keep things simple and avoid breaking changes, we'll create a separate order per cart item.
-        // This is a quick fix to allow testing. A real implementation would have OrderItem entities.
+    public OrderResponse createOrder(OrderRequest request) {
+        log.info("Creating order - mealId: {}, quantity: {}, phone: {}",
+                request.getMealId(), request.getQuantity(), request.getPhone());
 
-        // For demonstration, we'll just create an order for the first item in the cart
-        // and log that multiple items will be supported later.
-        List<CartItemDTO> items = cart.getItems();
-        if (items.isEmpty()) {
-            throw new RuntimeException("Cart is empty");
-        }
+        // Find the meal
+        Meal meal = mealRepository.findById(request.getMealId())
+                .orElseThrow(() -> {
+                    log.error("Meal not found with id: {}", request.getMealId());
+                    return new RuntimeException("Meal not found with id: " + request.getMealId());
+                });
 
-        // Take the first item as the main order item (temporary)
-        CartItemDTO firstItem = items.get(0);
-        Meal meal = mealRepository.findById(firstItem.getMealId())
-                .orElseThrow(() -> new RuntimeException("Meal not found"));
+        log.info("Found meal: {} (price: {})", meal.getName(), meal.getPrice());
 
+        // Calculate total amount
+        Double totalAmount = meal.getPrice() * request.getQuantity();
+        log.info("Total amount calculated: {}", totalAmount);
+
+        // Create and save order
         Order order = new Order();
         order.setMeal(meal);
-        order.setQuantity(firstItem.getQuantity());
-        order.setTotalAmount(firstItem.getSubtotal());
-        order.setCustomerPhone(customerPhone);
+        order.setQuantity(request.getQuantity());
+        order.setTotalAmount(totalAmount);
+        order.setCustomerPhone(request.getPhone());
         order.setStatus(OrderStatus.PENDING);
-        // order.setOrderTime(LocalDateTime.now()); // automatically set by @PrePersist
 
-        // For multiple items, we could create OrderItems, but for now just save one.
-        // We'll log that multiple items are not fully supported yet.
-        if (items.size() > 1) {
-            System.out.println("Warning: Cart contains " + items.size() + " items. " +
-                    "Only the first item will be saved in this order. " +
-                    "Full multi-item support requires the OrderItem entity.");
-        }
+        Order savedOrder = orderRepository.save(order);
+        log.info("Order saved with id: {}", savedOrder.getId());
 
-        return orderRepository.save(order);
+        return OrderResponse.builder()
+                .orderId(savedOrder.getId())
+                .totalAmount(savedOrder.getTotalAmount())
+                .status(savedOrder.getStatus().name())
+                .message("Order created successfully")
+                .build();
     }
 }
