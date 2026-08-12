@@ -50,6 +50,9 @@ public class Order {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "checkout_request_id", length = 100)
+    private String checkoutRequestId;
+
     @PrePersist
     protected void onCreate() {
         orderTime = LocalDateTime.now();
