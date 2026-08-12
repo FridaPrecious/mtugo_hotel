@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mtugo Hotel - Your Cart</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #faf8f5;
+            color: #2c2c2c;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .top-bar {
+            background: linear-gradient(135deg, #0b1a2e 0%, #1a2f3f 50%, #2a4a5a 100%);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-bar h1 { font-size: 1.4em; font-weight: 300; }
+        .top-bar h1 span { font-weight: 700; color: #d4af37; }
+        .top-bar a {
+            color: #c9d4d9;
+            text-decoration: none;
+            font-size: 0.95em;
+        }
+        .top-bar a:hover { color: white; text-decoration: underline; }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .cart-header h2 {
+            font-size: 1.8em;
+            font-weight: 300;
+            color: #0b1a2e;
+            border-left: 5px solid #d4af37;
+            padding-left: 18px;
+        }
+        .cart-header .count {
+            background: #eef3f7;
+            padding: 4px 16px;
+            border-radius: 30px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+        .empty-cart span { font-size: 3em; display: block; margin-bottom: 10px; }
+        .empty-cart .btn-browse {
+            display: inline-block;
+            margin-top: 16px;
+            background: #d4af37;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .empty-cart .btn-browse:hover { background: #c4a030; }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: white;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            transition: box-shadow 0.2s;
+        }
+        .cart-item:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .cart-item .item-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .cart-item .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .cart-item .item-info { flex: 1; }
+        .cart-item .item-info h3 { font-size: 1em; color: #0b1a2e; }
+        .cart-item .item-info .category {
+            font-size: 0.7em;
+            text-transform: uppercase;
+            color: #2a4a5a;
+            background: #eef3f7;
+            padding: 1px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+        .cart-item .item-price { font-weight: 600; color: #d4af37; min-width: 70px; text-align: right; }
+        .cart-item .qty-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0ede8;
+            border-radius: 30px;
+            padding: 4px;
+        }
+        .cart-item .qty-control button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: background 0.15s;
+            color: #333;
+        }
+        .cart-item .qty-control button:hover { background: #d4af37; color: white; }
+        .cart-item .qty-control .qty-num {
+            min-width: 28px;
+            text-align: center;
+            font-weight: 600;
+        }
+        .btn-remove {
+            background: none;
+            border: none;
+            color: #cc5555;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.2s;
+        }
+        .btn-remove:hover { color: #aa3333; }
+
+        .cart-summary {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin-top: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .cart-summary .total {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #d4af37;
+        }
+        .cart-summary .total small {
+            font-weight: 400;
+            color: #888;
+            font-size: 0.6em;
+        }
+        .btn-checkout {
+            background: #0b1a2e;
+            color: white;
+            padding: 12px 36px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+        }
+        .btn-checkout:hover { background: #1a2f3f; }
+        .btn-checkout:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .toast-message {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #0b1a2e;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 999;
+        }
+        .toast-message.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            .cart-item { flex-wrap: wrap; gap: 12px; }
+            .cart-item .item-image { width: 60px; height: 60px; }
+            .cart-item .item-price { min-width: auto; }
+            .cart-summary { flex-direction: column; gap: 16px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="top-bar">
+        <h1>Mtugo <span>Hotel</span></h1>
+        <a href="/">← Continue Browsing</a>
+    </header>
+
+    <main class="container">
+        <div class="cart-header">
+            <h2>Your Cart</h2>
+            <span class="count" th:text="'(' + ${cart.totalItems} + ' items)'">(0 items)</span>
+        </div>
+
+        <div th:if="${cart.items.isEmpty()}">
+            <div class="empty-cart">
+                <span>🛒</span>
+                <p>Your cart is empty.</p>
+                <a href="/" class="btn-browse">Browse Our Menu</a>
+            </div>
+        </div>
+
+        <div th:if="!${cart.items.isEmpty()}">
+            <div id="cartItems">
+                <div class="cart-item" th:each="item : ${cart.items}" data-id="${item.mealId}">
+                    <div class="item-image">
+                        <img th:src="${item.imageUrl}" alt="Meal" onerror="this.src='https://placehold.co/80x80/e0e0e0/666?text=Meal'">
+                    </div>
+                    <div class="item-info">
+                        <h3 th:text="${item.name}">Meal Name</h3>
+                        <span class="category">Category</span>
+                    </div>
+                    <div class="item-price" th:text="'KSH ' + ${item.price}">KSH 1.00</div>
+                    <div class="qty-control">
+                        <button class="qty-minus" data-id="${item.mealId}">−</button>
+                        <span class="qty-num" th:text="${item.quantity}">1</span>
+                        <button class="qty-plus" data-id="${item.mealId}">+</button>
+                    </div>
+                    <button class="btn-remove" data-id="${item.mealId}">✕</button>
+                </div>
+            </div>
+
+            <div class="cart-summary">
+                <span class="total">
+                    Total: KSH <span id="totalAmount" th:text="${cart.totalAmount}">0.00</span>
+                </span>
+                <a href="/checkout" class="btn-checkout" id="checkoutBtn">Proceed to Checkout</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div class="toast-message" id="toast"></div>
+
+    <script>
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(toast._hideTimeout);
+            toast._hideTimeout = setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function updateCart() {
+            fetch('/cart/count')
+                .then(r => r.json())
+                .then(count => {
+                    // Update cart count in header if it exists
+                    const countEl = document.querySelector('.cart-header .count');
+                    if (countEl) countEl.textContent = '(' + count + ' items)';
+                });
+        }
+
+        document.addEventListener('click', function(e) {
+            const target = e.target;
+
+            // Add to cart from menu page
+            if (target.classList.contains('btn-add-cart')) {
+                const id = target.dataset.id;
+                const price = target.dataset.price;
+                fetch('/cart/add?mealId=' + id + '&quantity=1', { method: 'POST' })
+                    .then(r => r.json())
+                    .then(data => {
+                        showToast('Added to cart!');
+                        updateCart();
+                    });
+            }
+
+            // Quantity plus
+            if (target.classList.contains('qty-plus')) {
+                const id = target.dataset.id;
+                const qtySpan = target.parentElement.querySelector('.qty-num');
+                const currentQty = parseInt(qtySpan.textContent);
+                fetch('/cart/update?mealId=' + id + '&quantity=' + (currentQty + 1), { method: 'POST' })
+                    .then(r => r.json())
+                    .then(data => {
+                        // Reload page to reflect changes
+                        window.location.reload();
+                    });
+            }
+
+            // Quantity minus
+            if (target.classList.contains('qty-minus')) {
+                const id = target.dataset.id;
+                const qtySpan = target.parentElement.querySelector('.qty-num');
+                const currentQty = parseInt(qtySpan.textContent);
+                if (currentQty > 1) {
+                    fetch('/cart/update?mealId=' + id + '&quantity=' + (currentQty - 1), { method: 'POST' })
+                        .then(r => r.json())
+                        .then(data => {
+                            window.location.reload();
+                        });
+                }
+            }
+
+            // Remove item
+            if (target.classList.contains('btn-remove')) {
+                const id = target.dataset.id;
+                if (confirm('Remove this item from cart?')) {
+                    fetch('/cart/remove?mealId=' + id, { method: 'POST' })
+                        .then(r => r.json())
+                        .then(data => {
+                            window.location.reload();
+                        });
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -9,9 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderResponse {
+public class MpesaStkPushRequest {
     private Long orderId;
-    private Double totalAmount;
-    private String status;
-    private String message;
+    private String phone;
+    private Double amount;
 }

@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderResponse {
-    private Long orderId;
-    private Double totalAmount;
-    private String status;
-    private String message;
+public class MpesaStkPushResponse {
+    private String MerchantRequestID;
+    private String CheckoutRequestID;
+    private String ResponseCode;
+    private String ResponseDescription;
 }
