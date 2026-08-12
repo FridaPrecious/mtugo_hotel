@@ -1,5 +1,13 @@
 package com.mtugo.mtugo_hotel.repository;
 
-public class MealRepository {
-    
+import com.mtugo.mtugo_hotel.entity.Meal;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface MealRepository extends JpaRepository<Meal, Long> {
+
+    List<Meal> findByIsAvailableTrue();
 }
