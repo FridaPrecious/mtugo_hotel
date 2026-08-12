@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mtugo Hotel - Order Summary</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            background: #1a1a2e;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar h1 {
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+
+        .top-bar a {
+            color: #a8d8ea;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+
+        .top-bar a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 0 20px;
+            width: 100%;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+            padding: 36px 32px 32px;
+        }
+
+        .card h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 24px;
+            border-left: 5px solid #e67e22;
+            padding-left: 16px;
+        }
+
+        .meal-detail {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .meal-detail .icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #f7f9fc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .meal-detail .icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .meal-detail .info h3 {
+            font-size: 1.15em;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .meal-detail .info p {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 2px;
+        }
+
+        .meal-detail .info .category-tag {
+            display: inline-block;
+            background: #e8f0fe;
+            color: #1a73e8;
+            font-size: 0.7em;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 2px 14px;
+            border-radius: 20px;
+            margin-top: 6px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.05em;
+            padding: 4px 0;
+        }
+
+        .price-row .label {
+            color: #666;
+        }
+
+        .price-row .value {
+            font-weight: 600;
+        }
+
+        .quantity-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 24px 0 16px;
+            padding: 16px 0;
+            border-top: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .quantity-section label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .quantity-section input {
+            width: 64px;
+            padding: 8px 4px;
+            font-size: 1em;
+            text-align: center;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+            transition: border-color 0.2s;
+        }
+
+        .quantity-section input:focus {
+            outline: none;
+            border-color: #27ae60;
+            background: white;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0 28px;
+        }
+
+        .total-row .label {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .total-row .value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #e67e22;
+        }
+
+        .btn-proceed {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: center;
+        }
+
+        .btn-proceed:hover {
+            background: #1e8449;
+        }
+
+        .btn-back {
+            display: inline-block;
+            margin-top: 16px;
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+
+        .btn-back:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px auto;
+            }
+
+            .card {
+                padding: 24px 18px 24px;
+                border-radius: 16px;
+            }
+
+            .meal-detail {
+                flex-direction: column;
+                text-align: center;
+                gap: 12px;
+            }
+
+            .meal-detail .icon {
+                width: 64px;
+                height: 64px;
+            }
+
+            .card h2 {
+                font-size: 1.2em;
+            }
+
+            .total-row .value {
+                font-size: 1.4em;
+            }
+
+            .total-row .label {
+                font-size: 1em;
+            }
+
+            .top-bar h1 {
+                font-size: 1.1em;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .container {
+                padding: 0 12px;
+            }
+
+            .card {
+                padding: 18px 14px 20px;
+            }
+
+            .quantity-section {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="top-bar">
+        <h1>MTUGO HOTEL</h1>
+        <a href="/">← Back to Menu</a>
+    </header>
+
+    <!-- MAIN -->
+    <main class="container">
+        <div class="card">
+            <h2>Order Summary</h2>
+
+            <!-- Meal Detail -->
+            <div class="meal-detail">
+                <div class="icon">
+                    <img th:src="${meal.imageUrl}" alt="Meal image" 
+                         onerror="this.src='https://placehold.co/80x80/e0e0e0/666?text=Meal'">
+                </div>
+                <div class="info">
+                    <h3 th:text="${meal.name}">Meal Name</h3>
+                    <p th:text="${meal.description}">Description</p>
+                    <span class="category-tag" th:text="${meal.category}">Category</span>
+                </div>
+            </div>
+
+            <!-- Unit Price -->
+            <div class="price-row">
+                <span class="label">Unit Price</span>
+                <span class="value">KSH <span th:text="${meal.price}">1.00</span></span>
+            </div>
+
+            <!-- Quantity -->
+            <div class="quantity-section">
+                <label for="quantity">Quantity</label>
+                <input type="number" id="quantity" min="1" max="10" value="1" th:value="${quantity}">
+            </div>
+
+            <!-- Total -->
+            <div class="total-row">
+                <span class="label">Total</span>
+                <span class="value">KSH <span id="totalDisplay" th:text="${total}">1.00</span></span>
+            </div>
+
+            <!-- Proceed Button -->
+            <button class="btn-proceed" id="proceedBtn">Proceed to Payment</button>
+            <a href="/" class="btn-back">← Choose another meal</a>
+        </div>
+    </main>
+
+    <!-- SCRIPT -->
+    <script>
+        const price = parseFloat(/*[[${meal.price}]]*/ 1.00);
+        const quantityInput = document.getElementById('quantity');
+        const totalDisplay = document.getElementById('totalDisplay');
+        const proceedBtn = document.getElementById('proceedBtn');
+
+        quantityInput.addEventListener('input', function() {
+            const qty = parseInt(this.value) || 1;
+            const total = (price * qty).toFixed(2);
+            totalDisplay.textContent = total;
+        });
+
+        proceedBtn.addEventListener('click', function() {
+            const qty = parseInt(quantityInput.value) || 1;
+            const mealId = /*[[${meal.id}]]*/ 1;
+            window.location.href = '/payment?mealId=' + mealId + '&quantity=' + qty;
+        });
+    </script>
+
+</body>
+</html>

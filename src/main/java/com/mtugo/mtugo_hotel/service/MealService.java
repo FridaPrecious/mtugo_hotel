@@ -26,6 +26,12 @@ public class MealService {
                 .collect(Collectors.toList());
     }
 
+    // ADD THIS METHOD
+    public Meal getMealById(Long id) {
+        return mealRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Meal not found with id: " + id));
+    }
+
     private MealResponse mapToResponse(Meal meal) {
         return MealResponse.builder()
                 .id(meal.getId())

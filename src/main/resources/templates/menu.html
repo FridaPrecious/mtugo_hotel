@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mtugo Hotel · Exquisite Dining</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #faf8f5;
+            color: #2c2c2c;
+            line-height: 1.6;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #0b1a2e 0%, #1a2f3f 50%, #2a4a5a 100%);
+            color: #f5efe6;
+            padding: 40px 20px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.06"><path d="M20 20 L80 20 L80 80 L20 80 Z" stroke="%23ffffff" stroke-width="0.5" fill="none"/><circle cx="50" cy="50" r="30" stroke="%23ffffff" stroke-width="0.5" fill="none"/></svg>');
+            background-size: 120px 120px;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .hero h1 {
+            font-size: 2.6em;
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #f5efe6;
+        }
+
+        .hero h1 span {
+            font-weight: 700;
+            color: #d4af37;
+        }
+
+        .hero .tagline {
+            font-size: 1em;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #c9d4d9;
+        }
+
+        .hero .sub-text {
+            font-size: 0.85em;
+            color: #b0c4ce;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        .cart-link {
+            color: white;
+            text-decoration: none;
+            font-size: 0.95em;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 18px 8px 14px;
+            border-radius: 30px;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .cart-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .cart-badge {
+            background: #d4af37;
+            color: #0b1a2e;
+            border-radius: 50%;
+            padding: 0px 8px;
+            font-size: 0.7em;
+            font-weight: 700;
+            line-height: 1.6;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .search-section {
+            max-width: 1200px;
+            margin: -20px auto 30px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 5;
+        }
+
+        .search-wrapper {
+            background: white;
+            border-radius: 50px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            padding: 6px 6px 6px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 600px;
+            margin: 0 auto;
+            transition: box-shadow 0.3s;
+        }
+
+        .search-wrapper:focus-within {
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-wrapper .icon {
+            color: #b0b0b0;
+            font-size: 1.2em;
+            flex-shrink: 0;
+        }
+
+        .search-wrapper input {
+            flex: 1;
+            border: none;
+            padding: 14px 0;
+            font-size: 1em;
+            background: transparent;
+            outline: none;
+            color: #1a1a2e;
+        }
+
+        .search-wrapper input::placeholder {
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .search-wrapper .clear-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 0 12px;
+            transition: color 0.2s;
+        }
+        .search-wrapper .clear-btn:hover {
+            color: #888;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .section-header h2 {
+            font-size: 1.8em;
+            font-weight: 300;
+            color: #1a2f3f;
+            letter-spacing: 1px;
+            border-left: 5px solid #d4af37;
+            padding-left: 18px;
+        }
+
+        .section-header .result-count {
+            font-size: 0.9em;
+            color: #888;
+            background: #f0ede8;
+            padding: 4px 16px;
+            border-radius: 30px;
+        }
+
+        .meal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 30px;
+        }
+
+        .meal-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .meal-card.hidden {
+            display: none;
+        }
+
+        .meal-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+        }
+
+        .meal-card .card-image {
+            background: #f0ede8;
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .meal-card .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .meal-card:hover .card-image img {
+            transform: scale(1.05);
+        }
+
+        .meal-card .card-image .badge {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            background: #d4af37;
+            color: white;
+            font-size: 0.7em;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 4px 14px;
+            border-radius: 30px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .meal-card .card-body {
+            padding: 18px 20px 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meal-card .card-body .category-tag {
+            display: inline-block;
+            background: #eef3f7;
+            color: #2a4a5a;
+            font-size: 0.65em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 2px 14px;
+            border-radius: 20px;
+            align-self: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .meal-card .card-body h3 {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0b1a2e;
+            margin-bottom: 4px;
+        }
+
+        .meal-card .card-body .description {
+            font-size: 0.85em;
+            color: #666;
+            margin: 6px 0 14px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        .meal-card .card-body .price-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+            padding-top: 14px;
+            border-top: 1px solid #f0ede8;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .meal-card .card-body .price {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #d4af37;
+        }
+
+        .meal-card .card-body .price small {
+            font-size: 0.6em;
+            font-weight: 400;
+            color: #999;
+            margin-left: 4px;
+        }
+
+        .btn-add-cart {
+            display: inline-block;
+            background: #0b1a2e;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn-add-cart:hover {
+            background: #1a2f3f;
+            transform: scale(1.02);
+        }
+
+        .btn-add-cart.added {
+            background: #27ae60;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+            font-size: 1.1em;
+            grid-column: 1 / -1;
+            display: none;
+        }
+
+        .no-results.show {
+            display: block;
+        }
+
+        .no-results .icon {
+            font-size: 2.5em;
+            display: block;
+            margin-bottom: 10px;
+            color: #ccc;
+        }
+
+        .toast-message {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #0b1a2e;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 999;
+            font-size: 0.95em;
+        }
+
+        .toast-message.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-message .highlight {
+            color: #d4af37;
+            font-weight: 600;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: #999;
+            font-size: 0.85em;
+            border-top: 1px solid #e8e3dc;
+            background: white;
+        }
+
+        footer span {
+            color: #d4af37;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-top { flex-direction: column; align-items: center; text-align: center; }
+            .hero h1 { font-size: 2em; letter-spacing: 2px; }
+            .search-wrapper { max-width: 100%; padding: 4px 4px 4px 18px; }
+            .search-wrapper input { padding: 12px 0; font-size: 0.95em; }
+            .meal-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+            .section-header h2 { font-size: 1.4em; }
+            .meal-card .card-image { height: 160px; }
+        }
+
+        @media (max-width: 480px) {
+            .hero { padding: 30px 16px 24px; }
+            .hero h1 { font-size: 1.6em; }
+            .hero .tagline { font-size: 0.85em; }
+            .meal-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+            .meal-card .card-body { padding: 14px 16px 16px; }
+            .meal-card .card-body h3 { font-size: 1em; }
+            .meal-card .card-body .description { font-size: 0.75em; -webkit-line-clamp: 1; }
+            .meal-card .card-body .price { font-size: 1.1em; }
+            .btn-add-cart { font-size: 0.7em; padding: 6px 14px; }
+            .search-wrapper { padding: 4px 4px 4px 14px; }
+            .search-wrapper input { font-size: 0.85em; padding: 10px 0; }
+            .cart-link { font-size: 0.8em; padding: 6px 12px 6px 10px; }
+            .toast-message { bottom: 16px; right: 16px; left: 16px; text-align: center; border-radius: 10px; padding: 12px 16px; font-size: 0.9em; }
+        }
+
+        @media (max-width: 380px) {
+            .meal-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO -->
+    <header class="hero">
+        <div class="hero-content">
+            <div class="hero-top">
+                <div>
+                    <h1>Mtugo <span>Hotel</span></h1>
+                    <div class="tagline">Where Culinary Excellence Meets Elegance</div>
+                </div>
+                <a href="/cart" class="cart-link">
+                    [ Cart ]
+                    <span class="cart-badge" id="cartBadge">0</span>
+                </a>
+            </div>
+            <div class="sub-text">Savour the moment, order with ease</div>
+        </div>
+    </header>
+
+    <!-- SEARCH -->
+    <div class="search-section">
+        <div class="search-wrapper">
+            <span class="icon"></span>
+            <input type="text" id="searchInput" placeholder="Search for your favourite dish...">
+            <button class="clear-btn" id="clearSearch" title="Clear search">✕</button>
+        </div>
+    </div>
+
+    <!-- MEAL GRID -->
+    <main class="container">
+        <div class="section-header">
+            <h2>Our Signature Selection</h2>
+            <span class="result-count" id="resultCount">6 items</span>
+        </div>
+
+        <div class="meal-grid" id="mealGrid">
+            <!-- FIX: Use th:data-* attributes -->
+            <div class="meal-card" th:each="meal : ${meals}" th:data-id="${meal.id}" th:data-name="${meal.name}" th:data-category="${meal.category}">
+                <div class="card-image">
+                    <img th:src="${meal.imageUrl}" alt="Meal image" 
+                         onerror="this.src='https://placehold.co/400x300/e0e0e0/666?text=Meal'">
+                    <span class="badge" th:if="${meal.id <= 2}">Chef's Pick</span>
+                </div>
+                <div class="card-body">
+                    <span class="category-tag" th:text="${meal.category}">Category</span>
+                    <h3 th:text="${meal.name}">Meal Name</h3>
+                    <p class="description" th:text="${meal.description}">Description</p>
+                    <div class="price-row">
+                        <span class="price">KSH <span th:text="${meal.price}">1.00</span></span>
+                        <!-- FIX: th:data-id and th:data-name -->
+                        <button class="btn-add-cart" th:data-id="${meal.id}" th:data-name="${meal.name}">+ Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Results -->
+        <div class="no-results" id="noResults">
+            <span class="icon">=)</span>
+            <p>We couldn't find any dishes matching your search.</p>
+            <p style="font-size:0.9em; margin-top:6px;">Try a different keyword or browse our full menu.</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 <span>Mtugo Hotel</span> &mdash; Elevating your dining experience</p>
+    </footer>
+
+    <!-- TOAST -->
+    <div class="toast-message" id="toast"></div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        (function() {
+            // Search
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearch');
+            const cards = document.querySelectorAll('.meal-card');
+            const noResults = document.getElementById('noResults');
+            const resultCount = document.getElementById('resultCount');
+
+            function filterMeals() {
+                const query = searchInput.value.trim().toLowerCase();
+                let visibleCount = 0;
+                cards.forEach(card => {
+                    const name = card.getAttribute('data-name')?.toLowerCase() || '';
+                    const category = card.getAttribute('data-category')?.toLowerCase() || '';
+                    const desc = card.querySelector('.description')?.textContent?.toLowerCase() || '';
+                    const match = name.includes(query) || category.includes(query) || desc.includes(query);
+                    if (match) {
+                        card.classList.remove('hidden');
+                        visibleCount++;
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+                resultCount.textContent = visibleCount + ' item' + (visibleCount !== 1 ? 's' : '');
+                if (visibleCount === 0 && query.length > 0) {
+                    noResults.classList.add('show');
+                } else {
+                    noResults.classList.remove('show');
+                }
+            }
+            searchInput.addEventListener('input', filterMeals);
+            clearBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                filterMeals();
+                searchInput.focus();
+            });
+            filterMeals();
+
+            // Cart badge
+            function updateCartBadge() {
+                fetch('/cart/count')
+                    .then(r => r.json())
+                    .then(count => {
+                        const badge = document.getElementById('cartBadge');
+                        if (badge) badge.textContent = count;
+                    })
+                    .catch(() => {});
+            }
+
+            // Toast
+            function showToast(message, isSuccess) {
+                const toast = document.getElementById('toast');
+                toast.innerHTML = message;
+                toast.style.background = isSuccess ? '#0b1a2e' : '#cc5555';
+                toast.classList.add('show');
+                clearTimeout(toast._hideTimeout);
+                toast._hideTimeout = setTimeout(() => toast.classList.remove('show'), 2500);
+            }
+
+            // Add to Cart
+            document.querySelectorAll('.btn-add-cart').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const id = this.dataset.id;    // Now numeric
+                    const name = this.dataset.name;
+                    if (!id) {
+                        showToast('Error: meal id not found', false);
+                        return;
+                    }
+                    fetch('/cart/add?mealId=' + id + '&quantity=1', { method: 'POST' })
+                        .then(r => {
+                            if (!r.ok) throw new Error('Server returned ' + r.status);
+                            return r.json();
+                        })
+                        .then(data => {
+                            this.textContent = ' Added';
+                            this.classList.add('added');
+                            setTimeout(() => {
+                                this.textContent = '+ Add to Cart';
+                                this.classList.remove('added');
+                            }, 2000);
+                            showToast('Added <span class="highlight">' + name + '</span> to cart!', true);
+                            updateCartBadge();
+                        })
+                        .catch(err => {
+                            showToast('Error: ' + err.message, false);
+                        });
+                });
+            });
+
+            updateCartBadge();
+        })();
+    </script>
+</body>
+</html>
