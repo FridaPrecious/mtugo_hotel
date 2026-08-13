@@ -6,6 +6,7 @@
     <title>Mtugo Hotel - Payment Failed</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: 'Segoe UI', Roboto, sans-serif;
             background: #faf8f5;
@@ -14,70 +15,77 @@
             display: flex;
             flex-direction: column;
         }
+
         .top-bar {
             background: linear-gradient(135deg, #0b1a2e 0%, #1a2f3f 50%, #2a4a5a 100%);
             color: white;
             padding: 16px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
+
         .top-bar h1 { font-size: 1.4em; font-weight: 300; }
         .top-bar h1 span { font-weight: 700; color: #d4af37; }
-        .top-bar a { color: #c9d4d9; text-decoration: none; font-size: 0.95em; }
-        .container { flex: 1; max-width: 600px; margin: 40px auto; padding: 0 20px; width: 100%; }
+
+        .container {
+            flex: 1;
+            max-width: 480px;
+            margin: 40px auto;
+            padding: 0 20px;
+            width: 100%;
+        }
+
         .card {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.08);
-            padding: 40px 32px;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
             text-align: center;
         }
+
         .icon {
-            width: 72px; height: 72px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
-            background: #fff0f0;
-            color: #cc5555;
-            font-size: 2.2em;
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 20px;
+            background: #c0392b;
+            color: white;
+            font-size: 2em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
         }
-        h2 { color: #1a2f3f; font-size: 1.5em; margin-bottom: 8px; }
-        .subtitle { color: #666; margin-bottom: 28px; }
-        .btn-row { display: flex; gap: 12px; justify-content: center; margin-top: 12px; }
+
+        h2 { margin-bottom: 8px; }
+        .subtitle { color: #666; margin-bottom: 24px; }
+
         .btn {
             display: inline-block;
-            padding: 14px 28px;
-            border-radius: 12px;
-            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 8px;
             text-decoration: none;
+            font-weight: 600;
+            margin: 6px;
         }
-        .btn.primary { background: #d4af37; color: white; }
-        .btn.primary:hover { background: #c4a030; }
-        .btn.secondary { background: #eef3f7; color: #2a4a5a; }
-        .btn.secondary:hover { background: #e0e8ee; }
+
+        .btn-primary { background: #d4af37; color: #1a1a1a; }
+        .btn-secondary { background: #f0f0f0; color: #2c2c2c; }
     </style>
 </head>
 <body>
-    <header class="top-bar">
+    <div class="top-bar">
         <h1>Mtugo <span>Hotel</span></h1>
-        <a href="/">Back to Menu</a>
-    </header>
+    </div>
 
-    <main class="container">
+    <div class="container">
         <div class="card">
-            <div class="icon">&#10005;</div>
+            <div class="icon">&#10007;</div>
             <h2>Payment Failed</h2>
-            <p class="subtitle">
-                We couldn't confirm payment for order #<span th:text="${order.id}">1</span>.
-                No charge was made if you didn't approve the M-Pesa prompt.
-            </p>
-            <div class="btn-row">
-                <a href="/" class="btn secondary">Back to Menu</a>
-                <a th:href="@{'/order?mealId=' + ${order.meal.id} + '&quantity=' + ${order.quantity}}"
-                   class="btn primary">Try Again</a>
-            </div>
+            <p class="subtitle">Your order could not be paid for. No charge was made.</p>
+            <p style="margin-bottom:24px;">Order # <strong th:text="${order.id}">1</strong></p>
+
+            <a class="btn btn-primary" th:href="@{'/order?mealId=' + ${order.meal.id} + '&quantity=' + ${order.quantity}}">Try Again</a>
+            <a class="btn btn-secondary" href="/">Back to Menu</a>
         </div>
-    </main>
+    </div>
 </body>
 </html>

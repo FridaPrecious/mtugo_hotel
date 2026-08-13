@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mtugo Hotel - Order Confirmed</title>
+    <title>Mtugo Hotel - Payment Successful</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: 'Segoe UI', Roboto, sans-serif;
             background: #faf8f5;
@@ -14,103 +15,153 @@
             display: flex;
             flex-direction: column;
         }
+
         .top-bar {
             background: linear-gradient(135deg, #0b1a2e 0%, #1a2f3f 50%, #2a4a5a 100%);
             color: white;
             padding: 16px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
+
         .top-bar h1 { font-size: 1.4em; font-weight: 300; }
         .top-bar h1 span { font-weight: 700; color: #d4af37; }
-        .top-bar a { color: #c9d4d9; text-decoration: none; font-size: 0.95em; }
-        .container { flex: 1; max-width: 600px; margin: 40px auto; padding: 0 20px; width: 100%; }
+
+        .container {
+            flex: 1;
+            max-width: 520px;
+            margin: 40px auto;
+            padding: 0 20px;
+            width: 100%;
+        }
+
         .card {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.08);
-            padding: 40px 32px;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
             text-align: center;
         }
+
         .icon {
-            width: 72px; height: 72px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
-            background: #e8f7ee;
-            color: #2e9e5b;
-            font-size: 2.2em;
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 20px;
-        }
-        h2 { color: #1a2f3f; font-size: 1.5em; margin-bottom: 8px; }
-        .subtitle { color: #666; margin-bottom: 28px; }
-        .summary-row {
-            display: flex; justify-content: space-between;
-            padding: 10px 0; border-bottom: 1px solid #eee;
-            text-align: left;
-        }
-        .summary-row .label { color: #666; }
-        .summary-row .value { font-weight: 600; color: #1a2f3f; }
-        .receipt {
-            margin-top: 20px;
-            background: #f7f9fc;
-            border-radius: 12px;
-            padding: 14px 18px;
-            font-size: 0.9em;
-            color: #2a4a5a;
-        }
-        .btn-home {
-            display: inline-block;
-            margin-top: 28px;
-            padding: 14px 32px;
-            background: #d4af37;
+            background: #2e7d4f;
             color: white;
-            text-decoration: none;
-            border-radius: 12px;
+            font-size: 2em;
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
         }
-        .btn-home:hover { background: #c4a030; }
+
+        h2 { margin-bottom: 8px; }
+        .subtitle { color: #666; margin-bottom: 24px; }
+
+        .details {
+            text-align: left;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            padding: 16px 0;
+            margin-bottom: 24px;
+        }
+
+        .details p { display: flex; justify-content: space-between; margin: 8px 0; }
+        .details span:first-child { color: #666; }
+        .details span:last-child { font-weight: 600; }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 6px;
+        }
+
+        .btn-primary { background: #d4af37; color: #1a1a1a; }
+        .btn-secondary { background: #f0f0f0; color: #2c2c2c; }
     </style>
 </head>
 <body>
-    <header class="top-bar">
+    <div class="top-bar">
         <h1>Mtugo <span>Hotel</span></h1>
-        <a href="/">Back to Menu</a>
-    </header>
+    </div>
 
-    <main class="container">
+    <div class="container">
         <div class="card">
             <div class="icon">&#10003;</div>
-            <h2>Order Confirmed!</h2>
-            <p class="subtitle">Your payment went through - we'll have it ready for you.</p>
+            <h2>Payment Successful</h2>
+            <p class="subtitle">Your order has been confirmed and is on its way to the kitchen.</p>
 
-            <div class="summary-row">
-                <span class="label">Order #</span>
-                <span class="value" th:text="${order.id}">1</span>
-            </div>
-            <div class="summary-row">
-                <span class="label">Meal</span>
-                <span class="value" th:text="${meal.name}">Meal Name</span>
-            </div>
-            <div class="summary-row">
-                <span class="label">Quantity</span>
-                <span class="value" th:text="${order.quantity}">1</span>
-            </div>
-            <div class="summary-row">
-                <span class="label">Amount Paid</span>
-                <span class="value">KSH <span th:text="${order.totalAmount}">1.00</span></span>
-            </div>
-            <div class="summary-row" th:if="${order.expectedReadyAt}">
-                <span class="label">Ready By</span>
-                <span class="value" th:text="${#temporals.format(order.expectedReadyAt, 'HH:mm')}">--:--</span>
+            <div id="statusBanner" style="background:#fff8e6; border-left:4px solid #d4af37; border-radius:8px; padding:14px 18px; margin-bottom:20px; text-align:left; font-weight:600; color:#8a6d1a;">
+                Preparing your order...
             </div>
 
-            <div class="receipt" th:if="${order.checkoutRequestId}">
-                Show this screen at the counter to collect your order.
+            <div class="details">
+                <p><span>Order #</span><span th:text="${order.id}">1</span></p>
+                <p><span>Meal</span><span th:text="${meal.name}">Meal</span></p>
+                <p><span>Quantity</span><span th:text="${order.quantity}">1</span></p>
+                <p><span>Total Paid</span><span th:text="'KSH ' + ${order.totalAmount}">KSH 1.00</span></p>
+                <p th:if="${order.expectedReadyAt}">
+                    <span>Estimated Ready</span>
+                    <span th:text="${#temporals.format(order.expectedReadyAt, 'HH:mm')}">--:--</span>
+                </p>
             </div>
 
-            <a href="/" class="btn-home">Order Something Else</a>
+            <a class="btn btn-primary" th:href="@{'/receipt/' + ${order.id}}">Download Receipt</a>
+            <a class="btn btn-secondary" href="/">Back to Menu</a>
         </div>
-    </main>
+    </div>
+
+    <script th:inline="javascript">
+        (function() {
+            const orderId = /*[[${order.id}]]*/ 1;
+            const banner = document.getElementById('statusBanner');
+            let pollTimer = null;
+
+            const STAGES = {
+                PAID: { text: 'Preparing your order...', bg: '#fff8e6', border: '#d4af37', color: '#8a6d1a' },
+                PREPARING: { text: '👨‍🍳 Your order is being cooked...', bg: '#fff8e6', border: '#d4af37', color: '#8a6d1a' },
+                READY: { text: '✅ Your order is ready for pickup!', bg: '#e9f7ee', border: '#2e7d4f', color: '#1e5c37' },
+                COMPLETED: { text: '🎉 Order collected. Thank you!', bg: '#eef3f7', border: '#2a4a5a', color: '#1a2f3f' }
+            };
+
+            function applyStage(status) {
+                const stage = STAGES[status];
+                if (!stage) return;
+                banner.textContent = stage.text;
+                banner.style.background = stage.bg;
+                banner.style.borderLeftColor = stage.border;
+                banner.style.color = stage.color;
+
+                if (status === 'READY' && Notification && Notification.permission === 'granted') {
+                    new Notification('Mtugo Hotel', { body: 'Your order is ready for pickup!' });
+                }
+            }
+
+            async function pollStatus() {
+                try {
+                    const res = await fetch('/api/orders/' + orderId + '/status');
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    applyStage(data.status);
+
+                    if (data.status === 'READY' || data.status === 'COMPLETED') {
+                        clearInterval(pollTimer);
+                    }
+                } catch (err) {
+                    console.error('Status poll failed', err);
+                }
+            }
+
+            if (window.Notification && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            pollStatus();
+            pollTimer = setInterval(pollStatus, 8000);
+        })();
+    </script>
 </body>
 </html>
