@@ -60,6 +60,7 @@ public class OrderService {
         order.setTotalAmount(totalAmount);
         order.setCustomerPhone(request.getPhone());
         order.setStatus(OrderStatus.PENDING);
+        order.setRequestedPickupTime(request.getPickupTime());
 
         Order savedOrder = orderRepository.save(order);
         log.info("Order saved with id: {}", savedOrder.getId());
@@ -100,7 +101,13 @@ public class OrderService {
                 orderId
         );
         int buffer = (int) pendingCount * 2;
-        LocalDateTime eta = LocalDateTime.now().plusMinutes(prepTime + buffer);
+        LocalDateTime earliestReady = LocalDateTime.now().plusMinutes(prepTime + buffer);
+
+        LocalDateTime eta = earliestReady;
+        if (order.getRequestedPickupTime() != null && order.getRequestedPickupTime().isAfter(earliestReady)) {
+            // Customer asked for a later pickup time than the kitchen needs - honor it.
+            eta = order.getRequestedPickupTime();
+        }
         order.setExpectedReadyAt(eta);
 
         orderRepository.save(order);
