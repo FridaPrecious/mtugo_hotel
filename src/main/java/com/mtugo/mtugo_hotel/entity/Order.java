@@ -49,6 +49,14 @@ public class Order {
     @Column(name = "expected_ready_at")
     private LocalDateTime expectedReadyAt;
 
+    @Column(name = "requested_pickup_time")
+    private LocalDateTime requestedPickupTime;
+
+    // Groups multiple Order rows created from a single cart checkout, so they
+    // share one payment and are progressed together (one meal = one Order row).
+    @Column(name = "cart_group_id", length = 36)
+    private String cartGroupId;
+
     // ===== M-Pesa Integration =====
     @Column(name = "checkout_request_id", length = 100)
     private String checkoutRequestId;

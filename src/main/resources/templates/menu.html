@@ -81,6 +81,12 @@
             font-style: italic;
         }
 
+        .hero-top-links {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .cart-link {
             color: white;
             text-decoration: none;
@@ -451,10 +457,13 @@
                     <h1>Mtugo <span>Hotel</span></h1>
                     <div class="tagline">Where Culinary Excellence Meets Elegance</div>
                 </div>
-                <a href="/cart" class="cart-link">
-                    [ Cart ]
-                    <span class="cart-badge" id="cartBadge">0</span>
-                </a>
+                <div class="hero-top-links">
+                    <a href="/track" class="cart-link">[ Track Order ]</a>
+                    <a href="/cart" class="cart-link">
+                        [ Cart ]
+                        <span class="cart-badge" id="cartBadge">0</span>
+                    </a>
+                </div>
             </div>
             <div class="sub-text">Savour the moment, order with ease</div>
         </div>
@@ -465,7 +474,7 @@
         <div class="search-wrapper">
             <span class="icon"></span>
             <input type="text" id="searchInput" placeholder="Search for your favourite dish...">
-            <button class="clear-btn" id="clearSearch" title="Clear search">✕</button>
+            <button class="clear-btn" id="clearSearch" title="Clear search">&times;</button>
         </div>
     </div>
 
@@ -607,5 +616,6 @@
             updateCartBadge();
         })();
     </script>
+    <script src="/js/order-tracker.js"></script>
 </body>
 </html>

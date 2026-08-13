@@ -32,6 +32,36 @@ public class MealService {
                 .orElseThrow(() -> new RuntimeException("Meal not found with id: " + id));
     }
 
+    /**
+     * Staff-facing listing - includes unavailable meals too, unlike the
+     * public menu which only shows what customers can currently order.
+     */
+    public List<Meal> getAllMeals() {
+        return mealRepository.findAll();
+    }
+
+    public Meal createMeal(com.mtugo.mtugo_hotel.dto.MealRequest request) {
+        Meal meal = new Meal();
+        applyRequest(meal, request);
+        return mealRepository.save(meal);
+    }
+
+    public Meal updateMeal(Long id, com.mtugo.mtugo_hotel.dto.MealRequest request) {
+        Meal meal = getMealById(id);
+        applyRequest(meal, request);
+        return mealRepository.save(meal);
+    }
+
+    private void applyRequest(Meal meal, com.mtugo.mtugo_hotel.dto.MealRequest request) {
+        if (request.getName() != null) meal.setName(request.getName());
+        if (request.getDescription() != null) meal.setDescription(request.getDescription());
+        if (request.getPrice() != null) meal.setPrice(request.getPrice());
+        if (request.getImageUrl() != null) meal.setImageUrl(request.getImageUrl());
+        if (request.getCategory() != null) meal.setCategory(request.getCategory());
+        if (request.getPrepTimeMinutes() != null) meal.setPrepTimeMinutes(request.getPrepTimeMinutes());
+        if (request.getIsAvailable() != null) meal.setIsAvailable(request.getIsAvailable());
+    }
+
     private MealResponse mapToResponse(Meal meal) {
         return MealResponse.builder()
                 .id(meal.getId())

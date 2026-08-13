@@ -443,12 +443,27 @@
                            maxlength="9"
                            autocomplete="tel"
                            inputmode="numeric">
-                    <button class="clear-phone" id="clearPhone" title="Clear">✕</button>
+                    <button class="clear-phone" id="clearPhone" title="Clear">&times;</button>
                 </div>
 
                 <div class="phone-error" id="phoneError">
                     Please enter a valid phone number (e.g., 712345678 or 0712345678)
                 </div>
+            </div>
+
+            <!-- Pickup Time -->
+            <div class="phone-section">
+                <label for="pickupSelect">Pickup Time</label>
+                <div class="hint">When would you like to collect your order?</div>
+                <select id="pickupSelect" style="width:100%; padding:14px; border-radius:12px; border:2px solid #e0e0e0; background:#f7f9fc; font-size:1em; color:#1a1a2e;">
+                    <option value="asap" selected>As soon as possible</option>
+                    <option value="30">In 30 minutes</option>
+                    <option value="45">In 45 minutes</option>
+                    <option value="60">In 1 hour</option>
+                    <option value="custom">Choose a time...</option>
+                </select>
+                <input type="time" id="customPickupTime" style="display:none; width:100%; margin-top:10px; padding:14px; border-radius:12px; border:2px solid #e0e0e0; background:#f7f9fc; font-size:1em; color:#1a1a2e;">
+                <div class="hint" id="pickupNote" style="margin-top:6px;">Note: your order may take longer than requested if the kitchen is busy - we'll always use whichever is later.</div>
             </div>
 
             <!-- Pay Button -->
@@ -479,6 +494,41 @@
             const payBtn = document.getElementById('payBtn');
             const paymentError = document.getElementById('paymentError');
             const errorMessage = document.getElementById('errorMessage');
+            const pickupSelect = document.getElementById('pickupSelect');
+            const customPickupTime = document.getElementById('customPickupTime');
+
+            // ----- Pickup Time Selection -----
+            pickupSelect.addEventListener('change', function() {
+                customPickupTime.style.display = (this.value === 'custom') ? 'block' : 'none';
+            });
+
+            // Returns a local ISO datetime string (no timezone suffix) Spring can parse
+            // as LocalDateTime, or null for "as soon as possible".
+            function getPickupTimeIso() {
+                const choice = pickupSelect.value;
+
+                if (choice === 'asap') {
+                    return null;
+                }
+
+                let target;
+                if (choice === 'custom') {
+                    if (!customPickupTime.value) return null;
+                    const [hh, mm] = customPickupTime.value.split(':').map(Number);
+                    target = new Date();
+                    target.setHours(hh, mm, 0, 0);
+                    // If the chosen clock time has already passed today, assume tomorrow.
+                    if (target.getTime() < Date.now()) {
+                        target.setDate(target.getDate() + 1);
+                    }
+                } else {
+                    target = new Date(Date.now() + parseInt(choice, 10) * 60000);
+                }
+
+                const pad = n => String(n).padStart(2, '0');
+                return target.getFullYear() + '-' + pad(target.getMonth() + 1) + '-' + pad(target.getDate())
+                    + 'T' + pad(target.getHours()) + ':' + pad(target.getMinutes()) + ':00';
+            }
 
             // ----- Phone Input Auto-Formatting -----
             function formatPhone(value) {
@@ -600,7 +650,8 @@
                     body: JSON.stringify({
                         mealId: mealId,
                         quantity: quantity,
-                        phone: fullPhone
+                        phone: fullPhone,
+                        pickupTime: getPickupTimeIso()
                     })
                 })
                 .then(response => {

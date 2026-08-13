@@ -13,10 +13,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -94,14 +96,38 @@ public class PaymentStatusController {
     }
 
     /**
+     * Lightweight polling endpoint for the customer-facing success page,
+     * so customers can see live status once staff move the order along.
+     */
+    @GetMapping("/api/orders/{orderId}/status")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getOrderStatus(@PathVariable Long orderId) {
+        Order order = orderService.findOrderById(orderId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("orderId", order.getId());
+        response.put("status", order.getStatus().name());
+        response.put("mealName", order.getMeal().getName());
+        response.put("quantity", order.getQuantity());
+        response.put("expectedReadyAt", order.getExpectedReadyAt());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Success page after payment is confirmed
      */
     @GetMapping("/payment/success")
     public String paymentSuccess(@RequestParam("orderId") Long orderId, Model model) {
         log.info("Payment success page requested for orderId: {}", orderId);
         Order order = orderService.findOrderById(orderId);
+        List<Order> group = orderService.findGroupIncludingSelf(order);
+        double groupTotal = group.stream().mapToDouble(Order::getTotalAmount).sum();
+
         model.addAttribute("order", order);
         model.addAttribute("meal", order.getMeal());
+        model.addAttribute("orderGroup", group);
+        model.addAttribute("groupTotal", groupTotal);
         return "payment-success";
     }
 

@@ -1,13 +1,17 @@
 package com.mtugo.mtugo_hotel.controller;
 
+import com.mtugo.mtugo_hotel.dto.MealRequest;
 import com.mtugo.mtugo_hotel.dto.StaffDashboardResponse;
+import com.mtugo.mtugo_hotel.entity.Meal;
 import com.mtugo.mtugo_hotel.entity.Order;
 import com.mtugo.mtugo_hotel.entity.OrderStatus;
+import com.mtugo.mtugo_hotel.service.MealService;
 import com.mtugo.mtugo_hotel.service.OrderService;
 import com.mtugo.mtugo_hotel.service.StaffService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,11 +25,13 @@ public class StaffController {
 
     private final StaffService staffService;
     private final OrderService orderService;
+    private final MealService mealService;
 
     @Autowired
-    public StaffController(StaffService staffService, OrderService orderService) {
+    public StaffController(StaffService staffService, OrderService orderService, MealService mealService) {
         this.staffService = staffService;
         this.orderService = orderService;
+        this.mealService = mealService;
     }
 
     /**
@@ -40,7 +46,7 @@ public class StaffController {
 
     /**
      * PUT /api/staff/orders/{orderId}/status
-     * Updates the status of an order (PAID → PREPARING → READY → COMPLETED)
+     * Updates the status of an order (PAID -> PREPARING -> READY -> COMPLETED)
      */
     @PutMapping("/orders/{orderId}/status")
     public ResponseEntity<Order> updateOrderStatus(
@@ -56,39 +62,43 @@ public class StaffController {
             throw new RuntimeException("Invalid status: " + status);
         }
 
-        Order order = orderService.findOrderById(orderId);
-        OrderStatus currentStatus = order.getStatus();
-
-        // Validate forward transition
-        boolean isValidTransition = switch (currentStatus) {
-            case PAID -> newStatus == OrderStatus.PREPARING;
-            case PREPARING -> newStatus == OrderStatus.READY;
-            case READY -> newStatus == OrderStatus.COMPLETED;
-            default -> false;
-        };
-
-        if (!isValidTransition) {
-            throw new RuntimeException("Invalid status transition from " + currentStatus + " to " + newStatus);
-        }
-
-        // Update status
-        if (newStatus == OrderStatus.COMPLETED) {
-            // Just mark as completed
-            order.setStatus(newStatus);
-        } else if (newStatus == OrderStatus.READY) {
-            order.setStatus(newStatus);
-            // When marked as ready, the expected ready time should be now or in the past
-        } else {
-            order.setStatus(newStatus);
-        }
-
-        Order updated = orderRepository.save(order);
-        log.info("Order {} status updated to {}", orderId, newStatus);
-
+        Order updated = orderService.updateOrderStatusByStaff(orderId, newStatus);
         return ResponseEntity.ok(updated);
     }
 
-    // Inject orderRepository for the update method
-    @Autowired
-    private com.mtugo.mtugo_hotel.repository.OrderRepository orderRepository;
+    // ===== Menu management =====
+
+    /**
+     * GET /api/staff/meals
+     * Full menu, including meals currently marked unavailable - unlike the
+     * public /api/meals endpoint that customers see.
+     */
+    @GetMapping("/meals")
+    public ResponseEntity<List<Meal>> getAllMeals() {
+        return ResponseEntity.ok(mealService.getAllMeals());
+    }
+
+    /**
+     * POST /api/staff/meals
+     * Adds a new item to the menu.
+     */
+    @PostMapping("/meals")
+    public ResponseEntity<Meal> createMeal(@RequestBody MealRequest request) {
+        Meal created = mealService.createMeal(request);
+        log.info("Staff created meal '{}' (id {})", created.getName(), created.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    /**
+     * PUT /api/staff/meals/{id}
+     * Edits an existing meal - name, description, price, category, prep
+     * time, image, or availability. Only fields present in the request body
+     * are changed.
+     */
+    @PutMapping("/meals/{id}")
+    public ResponseEntity<Meal> updateMeal(@PathVariable Long id, @RequestBody MealRequest request) {
+        Meal updated = mealService.updateMeal(id, request);
+        log.info("Staff updated meal {} ('{}')", id, updated.getName());
+        return ResponseEntity.ok(updated);
+    }
 }

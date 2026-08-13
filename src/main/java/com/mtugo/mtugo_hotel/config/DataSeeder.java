@@ -1,6 +1,8 @@
 package com.mtugo.mtugo_hotel.config;
 
+import com.mtugo.mtugo_hotel.entity.ApiCredential;
 import com.mtugo.mtugo_hotel.entity.Meal;
+import com.mtugo.mtugo_hotel.repository.ApiCredentialRepository;
 import com.mtugo.mtugo_hotel.repository.MealRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -9,13 +11,37 @@ import org.springframework.stereotype.Component;
 public class DataSeeder implements CommandLineRunner {
 
     private final MealRepository mealRepository;
+    private final ApiCredentialRepository apiCredentialRepository;
+    private final MpesaConfig mpesaConfig;
 
-    public DataSeeder(MealRepository mealRepository) {
+    public DataSeeder(MealRepository mealRepository,
+                       ApiCredentialRepository apiCredentialRepository,
+                       MpesaConfig mpesaConfig) {
         this.mealRepository = mealRepository;
+        this.apiCredentialRepository = apiCredentialRepository;
+        this.mpesaConfig = mpesaConfig;
     }
 
     @Override
     public void run(String... args) {
+
+        // Mirrors the mpesa.* values from application.properties into the
+        // api_credentials table, so it isn't empty and is ready for a future
+        // admin screen. The app still authenticates via MpesaConfig/properties
+        // for now - this table is a record, not (yet) the source of truth.
+        if (apiCredentialRepository.count() == 0) {
+            ApiCredential credential = new ApiCredential();
+            credential.setConsumerKey(mpesaConfig.getConsumerKey());
+            credential.setConsumerSecret(mpesaConfig.getConsumerSecret());
+            credential.setPasskey(mpesaConfig.getPasskey());
+            credential.setShortcode(mpesaConfig.getShortcode());
+            credential.setEnvironment("production".equalsIgnoreCase(mpesaConfig.getEnvironment())
+                    ? ApiCredential.Environment.PRODUCTION
+                    : ApiCredential.Environment.SANDBOX);
+            credential.setIsActive(true);
+            apiCredentialRepository.save(credential);
+            System.out.println("Seeded api_credentials from application.properties.");
+        }
 
         if (mealRepository.count() == 0) {
         System.out.println("=============================================");

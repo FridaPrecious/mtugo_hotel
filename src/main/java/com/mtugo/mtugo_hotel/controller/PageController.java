@@ -49,6 +49,16 @@ public class PageController {
         return "order";  // ← Returns order.html from templates/
     }
 
+    @GetMapping("/staff/dashboard")
+    public String staffDashboardPage() {
+        return "staff-dashboard";
+    }
+
+    @GetMapping("/track")
+    public String trackOrderPage() {
+        return "track-order";
+    }
+
     @SuppressWarnings("unchecked")
     private List<CartItemDTO> getCartFromSession(HttpSession session) {
         List<CartItemDTO> items = (List<CartItemDTO>) session.getAttribute(SESSION_CART_KEY);

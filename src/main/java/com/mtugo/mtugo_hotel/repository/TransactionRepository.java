@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     Optional<Transaction> findByCheckoutRequestId(String checkoutRequestId);
+    Optional<Transaction> findTopByOrder_IdOrderByIdDesc(Long orderId);
 }
