@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mtugo Hotel - Track My Order</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #faf8f5;
+            color: #2c2c2c;
+            min-height: 100vh;
+        }
+        .top-bar {
+            background: linear-gradient(135deg, #0b1a2e 0%, #1a2f3f 50%, #2a4a5a 100%);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-bar h1 { font-size: 1.4em; font-weight: 300; }
+        .top-bar h1 span { font-weight: 700; color: #d4af37; }
+        .top-bar a { color: #c9d4d9; text-decoration: none; font-size: 0.95em; }
+        .container { max-width: 560px; margin: 40px auto; padding: 0 20px; }
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+            padding: 32px;
+        }
+        h2 { color: #1a2f3f; margin-bottom: 6px; }
+        .subtitle { color: #666; margin-bottom: 24px; font-size: 0.95em; }
+        .lookup-row { display: flex; gap: 10px; }
+        .lookup-row input {
+            flex: 1;
+            padding: 12px 14px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+        .lookup-row button {
+            padding: 12px 24px;
+            background: #d4af37;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .lookup-row button:hover { background: #c4a030; }
+        .lookup-row button:disabled { background: #ddd; cursor: not-allowed; }
+
+        .result { margin-top: 28px; display: none; }
+        .result.visible { display: block; }
+
+        .order-meta { color: #555; font-size: 0.95em; margin-bottom: 22px; }
+        .order-meta b { color: #1a2f3f; }
+
+        .timeline { display: flex; justify-content: space-between; position: relative; margin: 20px 0 8px; }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 15px; left: 0; right: 0;
+            height: 3px;
+            background: #eee;
+            z-index: 0;
+        }
+        .step { flex: 1; text-align: center; position: relative; z-index: 1; }
+        .dot {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: #eee;
+            border: 3px solid #eee;
+            margin: 0 auto 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8em; font-weight: 700; color: #999;
+        }
+        .step.done .dot { background: #2e9e5b; border-color: #2e9e5b; color: white; }
+        .step.current .dot { background: #d4af37; border-color: #d4af37; color: white; }
+        .step-label { font-size: 0.8em; color: #777; }
+        .step.done .step-label, .step.current .step-label { color: #1a2f3f; font-weight: 600; }
+
+        .status-banner {
+            margin-top: 22px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .status-banner.waiting { background: #fff8e6; color: #8a6d1a; }
+        .status-banner.ready { background: #e9f7ee; color: #1e5c37; }
+        .status-banner.completed { background: #eef3f7; color: #1a2f3f; }
+        .status-banner.failed { background: #fff0f0; color: #a33333; }
+
+        .error-msg {
+            margin-top: 20px;
+            padding: 14px 18px;
+            background: #fff0f0;
+            color: #a33333;
+            border-radius: 12px;
+            display: none;
+        }
+        .error-msg.visible { display: block; }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <h1>Mtugo <span>Hotel</span></h1>
+        <a href="/">Back to Menu</a>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Track My Order</h2>
+            <p class="subtitle">Enter your order number to see how it's coming along.</p>
+
+            <div class="lookup-row">
+                <input type="number" id="orderIdInput" placeholder="Order number, e.g. 12" min="1">
+                <button id="trackBtn">Track</button>
+            </div>
+
+            <div class="error-msg" id="errorMsg">We couldn't find that order. Double check the number and try again.</div>
+
+            <div class="result" id="result">
+                <div class="order-meta">
+                    Order <b>#<span id="mOrderId"></span></b> -
+                    <span id="mQuantity"></span> x <b id="mMealName"></b>
+                </div>
+
+                <div class="timeline">
+                    <div class="step" id="stepPaid">
+                        <div class="dot">1</div>
+                        <div class="step-label">Paid</div>
+                    </div>
+                    <div class="step" id="stepPreparing">
+                        <div class="dot">2</div>
+                        <div class="step-label">Preparing</div>
+                    </div>
+                    <div class="step" id="stepReady">
+                        <div class="dot">3</div>
+                        <div class="step-label">Ready</div>
+                    </div>
+                    <div class="step" id="stepCompleted">
+                        <div class="dot">4</div>
+                        <div class="step-label">Collected</div>
+                    </div>
+                </div>
+
+                <div class="status-banner" id="statusBanner"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const STORAGE_KEY = 'mtugo_tracking_order';
+        const STEP_ORDER = ['PAID', 'PREPARING', 'READY', 'COMPLETED'];
+        const STEP_ELEMENTS = {
+            PAID: document.getElementById('stepPaid'),
+            PREPARING: document.getElementById('stepPreparing'),
+            READY: document.getElementById('stepReady'),
+            COMPLETED: document.getElementById('stepCompleted')
+        };
+
+        const BANNER_TEXT = {
+            PENDING: { text: 'Waiting for payment confirmation...', cls: 'waiting' },
+            PAID: { text: 'Payment received - your order is queued.', cls: 'waiting' },
+            PREPARING: { text: 'Your order is being cooked.', cls: 'waiting' },
+            READY: { text: 'Ready for pickup!', cls: 'ready' },
+            COMPLETED: { text: 'Order collected. Thank you!', cls: 'completed' },
+            FAILED: { text: 'Payment was not completed for this order.', cls: 'failed' }
+        };
+
+        let pollTimer = null;
+
+        function fmtTime(iso) {
+            if (!iso) return null;
+            return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function renderTimeline(status) {
+            const idx = STEP_ORDER.indexOf(status);
+            Object.entries(STEP_ELEMENTS).forEach(([key, el]) => {
+                const stepIdx = STEP_ORDER.indexOf(key);
+                el.classList.remove('done', 'current');
+                if (status === 'FAILED') return;
+                if (stepIdx < idx) el.classList.add('done');
+                else if (stepIdx === idx) el.classList.add('current');
+            });
+        }
+
+        function renderResult(data) {
+            document.getElementById('errorMsg').classList.remove('visible');
+            document.getElementById('result').classList.add('visible');
+
+            document.getElementById('mOrderId').textContent = data.orderId;
+            document.getElementById('mQuantity').textContent = data.quantity;
+            document.getElementById('mMealName').textContent = data.mealName;
+
+            renderTimeline(data.status);
+
+            const banner = document.getElementById('statusBanner');
+            const info = BANNER_TEXT[data.status] || { text: data.status, cls: 'waiting' };
+            let text = info.text;
+            if (data.status === 'PREPARING' && data.expectedReadyAt) {
+                text += ' Expected ready around ' + fmtTime(data.expectedReadyAt) + '.';
+            }
+            banner.textContent = text;
+            banner.className = 'status-banner ' + info.cls;
+
+            if (data.status === 'COMPLETED' || data.status === 'FAILED') {
+                stopPolling();
+            }
+        }
+
+        function showError() {
+            document.getElementById('result').classList.remove('visible');
+            document.getElementById('errorMsg').classList.add('visible');
+            stopPolling();
+        }
+
+        async function fetchStatus(orderId) {
+            try {
+                const res = await fetch('/api/orders/' + orderId + '/status');
+                if (!res.ok) {
+                    showError();
+                    return;
+                }
+                const data = await res.json();
+                renderResult(data);
+            } catch (e) {
+                showError();
+            }
+        }
+
+        function stopPolling() {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+        }
+
+        function startTracking(orderId) {
+            stopPolling();
+            fetchStatus(orderId);
+            pollTimer = setInterval(() => fetchStatus(orderId), 8000);
+            try { localStorage.setItem(STORAGE_KEY, String(orderId)); } catch (e) { /* ignore */ }
+        }
+
+        document.getElementById('trackBtn').addEventListener('click', () => {
+            const val = document.getElementById('orderIdInput').value.trim();
+            if (!val) return;
+            startTracking(val);
+        });
+
+        document.getElementById('orderIdInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('trackBtn').click();
+        });
+
+        // Pre-fill from the order the customer most recently paid for, if any.
+        try {
+            const remembered = localStorage.getItem(STORAGE_KEY);
+            if (remembered) {
+                document.getElementById('orderIdInput').value = remembered;
+                startTracking(remembered);
+            }
+        } catch (e) { /* localStorage unavailable */ }
+    </script>
+</body>
+</html>
