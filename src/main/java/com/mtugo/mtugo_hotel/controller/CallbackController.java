@@ -46,12 +46,12 @@ public class CallbackController {
             log.info("Callback: CheckoutRequestID: {}, ResultCode: {}, ResultDesc: {}",
                     checkoutRequestId, resultCode, resultDesc);
 
-            // Find the transaction by CheckoutRequestID 
+            // Find the transaction by CheckoutRequestID
             Transaction transaction = transactionRepository.findByCheckoutRequestId(checkoutRequestId)
                     .orElseThrow(() -> new RuntimeException("Transaction not found for checkoutRequestId: " + checkoutRequestId));
 
             if (resultCode == 0) {
-                // Payment  is successful
+                // Payment successful
                 JsonNode metadata = stkCallback.path("CallbackMetadata");
                 String receiptNumber = "";
                 if (metadata.has("Item")) {
@@ -65,7 +65,7 @@ public class CallbackController {
                 orderService.completeTransactionAndOrder(transaction.getId(), receiptNumber, resultDesc);
                 log.info("Transaction {} and order {} marked as PAID", transaction.getId(), transaction.getOrder().getId());
             } else {
-                // Payment  have failed
+                // Payment failed
                 orderService.failTransactionAndOrder(transaction.getId(), resultDesc);
                 log.info("Transaction {} and order {} marked as FAILED", transaction.getId(), transaction.getOrder().getId());
             }
@@ -79,4 +79,3 @@ public class CallbackController {
         }
     }
 }
-
