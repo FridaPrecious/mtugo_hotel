@@ -58,6 +58,15 @@
         h2 { margin-bottom: 8px; }
         .subtitle { color: #666; margin-bottom: 24px; }
 
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            text-align: left;
+            padding: 6px 0;
+        }
+        .item-row .name { color: #333; }
+        .item-row .amount { font-weight: 600; color: #555; }
+
         .details {
             text-align: left;
             border-top: 1px solid #eee;
@@ -100,9 +109,13 @@
 
             <div class="details">
                 <p><span>Order #</span><span th:text="${order.id}">1</span></p>
-                <p><span>Meal</span><span th:text="${meal.name}">Meal</span></p>
-                <p><span>Quantity</span><span th:text="${order.quantity}">1</span></p>
-                <p><span>Total Paid</span><span th:text="'KSH ' + ${order.totalAmount}">KSH 1.00</span></p>
+
+                <div th:each="item : ${orderGroup}" class="item-row">
+                    <span class="name" th:text="${item.meal.name} + ' x' + ${item.quantity}">Meal x1</span>
+                    <span class="amount" th:text="'KSH ' + ${item.totalAmount}">KSH 1.00</span>
+                </div>
+
+                <p><span>Total Paid</span><span th:text="'KSH ' + ${groupTotal}">KSH 1.00</span></p>
                 <p th:if="${order.expectedReadyAt}">
                     <span>Estimated Ready</span>
                     <span th:text="${#temporals.format(order.expectedReadyAt, 'HH:mm')}">--:--</span>
@@ -122,9 +135,9 @@
 
             const STAGES = {
                 PAID: { text: 'Preparing your order...', bg: '#fff8e6', border: '#d4af37', color: '#8a6d1a' },
-                PREPARING: { text: '👨‍🍳 Your order is being cooked...', bg: '#fff8e6', border: '#d4af37', color: '#8a6d1a' },
-                READY: { text: '✅ Your order is ready for pickup!', bg: '#e9f7ee', border: '#2e7d4f', color: '#1e5c37' },
-                COMPLETED: { text: '🎉 Order collected. Thank you!', bg: '#eef3f7', border: '#2a4a5a', color: '#1a2f3f' }
+                PREPARING: { text: 'Your order is being cooked...', bg: '#fff8e6', border: '#d4af37', color: '#8a6d1a' },
+                READY: { text: 'Your order is ready for pickup!', bg: '#e9f7ee', border: '#2e7d4f', color: '#1e5c37' },
+                COMPLETED: { text: 'Order collected. Thank you!', bg: '#eef3f7', border: '#2a4a5a', color: '#1a2f3f' }
             };
 
             function applyStage(status) {
@@ -135,8 +148,8 @@
                 banner.style.borderLeftColor = stage.border;
                 banner.style.color = stage.color;
 
-                if (status === 'READY' && Notification && Notification.permission === 'granted') {
-                    new Notification('Mtugo Hotel', { body: 'Your order is ready for pickup!' });
+                if (status === 'READY' && window.Notification && Notification.permission === 'granted') {
+                    new Notification('Mtugo Hotel', { body: 'Order #' + orderId + ' is ready for pickup!' });
                 }
             }
 
@@ -149,6 +162,7 @@
 
                     if (data.status === 'READY' || data.status === 'COMPLETED') {
                         clearInterval(pollTimer);
+                        localStorage.removeItem('mtugo_tracking_order');
                     }
                 } catch (err) {
                     console.error('Status poll failed', err);
@@ -158,6 +172,12 @@
             if (window.Notification && Notification.permission === 'default') {
                 Notification.requestPermission();
             }
+
+            // Remember this order so tracking continues on other pages
+            // (e.g. after the customer downloads the receipt and goes back to the menu).
+            try {
+                localStorage.setItem('mtugo_tracking_order', String(orderId));
+            } catch (e) { /* localStorage unavailable - tracking will just be page-local */ }
 
             pollStatus();
             pollTimer = setInterval(pollStatus, 8000);

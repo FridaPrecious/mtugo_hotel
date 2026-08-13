@@ -98,8 +98,8 @@ public class MpesaService {
                     "{\"BusinessShortCode\":\"%s\",\"Password\":\"%s\",\"Timestamp\":\"%s\"," +
                     "\"TransactionType\":\"CustomerPayBillOnline\",\"Amount\":\"%d\"," +
                     "\"PartyA\":\"%s\",\"PartyB\":\"%s\",\"PhoneNumber\":\"%s\"," +
-                    "\"CallBackURL\":\"%s\",\"AccountReference\":\"ORDER-%d\"," +
-                    "\"TransactionDesc\":\"Mtugo Hotel Meal Payment\"}",
+                    "\"CallBackURL\":\"%s\",\"AccountReference\":\"MTUGO-ORDER-%d\"," +
+                    "\"TransactionDesc\":\"Mtugo Restaurant Meal Payment\"}",
                     mpesaConfig.getShortcode(),
                     password,
                     timestamp,

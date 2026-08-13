@@ -125,6 +125,22 @@
         .phone-error { color: #cc5555; font-size: 0.85em; margin-top: 6px; display: none; }
         .phone-error.show { display: block; }
 
+        .pickup-section {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .pickup-section label { display: block; font-weight: 600; margin-bottom: 6px; color: #333; }
+        .pickup-section select, .pickup-section input[type="time"] {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            background: #f7f9fc;
+            font-size: 1em;
+            color: #1a1a2e;
+        }
+
         .pay-btn {
             display: block;
             width: 100%;
@@ -271,6 +287,21 @@
                     </div>
                 </div>
 
+                <!-- Pickup Time -->
+                <div class="pickup-section">
+                    <label for="pickupSelect">Pickup Time</label>
+                    <div class="hint">When would you like to collect your order?</div>
+                    <select id="pickupSelect">
+                        <option value="asap" selected>As soon as possible</option>
+                        <option value="30">In 30 minutes</option>
+                        <option value="45">In 45 minutes</option>
+                        <option value="60">In 1 hour</option>
+                        <option value="custom">Choose a time...</option>
+                    </select>
+                    <input type="time" id="customPickupTime" style="display:none; margin-top:10px;">
+                    <div class="hint" style="margin-top:6px;">Note: your order may take longer than requested if the kitchen is busy - we'll always use whichever is later.</div>
+                </div>
+
                 <!-- Pay Button -->
                 <button class="pay-btn" id="payBtn">
                     <span class="btn-text">Pay Now with M-Pesa</span>
@@ -287,16 +318,41 @@
         </div>
     </main>
 
-    <script th:inline="javascript">
+    <script>
         (function() {
-            // Pass cart data from Thymeleaf to JavaScript
-            var cart = /*[[${cart}]]*/ null;
-
             var phoneInput = document.getElementById('phoneInput');
             var phoneError = document.getElementById('phoneError');
             var payBtn = document.getElementById('payBtn');
             var paymentError = document.getElementById('paymentError');
             var errorMessage = document.getElementById('errorMessage');
+            var pickupSelect = document.getElementById('pickupSelect');
+            var customPickupTime = document.getElementById('customPickupTime');
+
+            pickupSelect.addEventListener('change', function() {
+                customPickupTime.style.display = (this.value === 'custom') ? 'block' : 'none';
+            });
+
+            function getPickupTimeIso() {
+                var choice = pickupSelect.value;
+                if (choice === 'asap') return null;
+
+                var target;
+                if (choice === 'custom') {
+                    if (!customPickupTime.value) return null;
+                    var parts = customPickupTime.value.split(':').map(Number);
+                    target = new Date();
+                    target.setHours(parts[0], parts[1], 0, 0);
+                    if (target.getTime() < Date.now()) {
+                        target.setDate(target.getDate() + 1);
+                    }
+                } else {
+                    target = new Date(Date.now() + parseInt(choice, 10) * 60000);
+                }
+
+                var pad = function(n) { return String(n).padStart(2, '0'); };
+                return target.getFullYear() + '-' + pad(target.getMonth() + 1) + '-' + pad(target.getDate())
+                    + 'T' + pad(target.getHours()) + ':' + pad(target.getMinutes()) + ':00';
+            }
 
             function formatPhone(value) {
                 var cleaned = value.replace(/\D/g, '');
@@ -347,7 +403,7 @@
 
             updatePayButton();
 
-            // Pay button click
+            // Pay button click - creates orders for the WHOLE cart, then a single STK push
             payBtn.addEventListener('click', function() {
                 var raw = getRawPhone(phoneInput.value);
                 if (!validatePhone(raw)) {
@@ -360,24 +416,59 @@
                     return;
                 }
 
-                // Check if cart has items
-                if (!cart || !cart.items || cart.items.length === 0) {
-                    paymentError.classList.add('show');
-                    errorMessage.textContent = 'Cart is empty.';
-                    return;
-                }
+                payBtn.disabled = true;
+                payBtn.classList.add('loading');
+                paymentError.classList.remove('show');
 
-                // For now, we redirect to the single-order page with the first item
-                // This is a temporary solution until we implement full cart checkout
-                var firstItem = cart.items[0];
-                if (firstItem) {
-                    window.location.href = '/order?mealId=' + firstItem.mealId + '&quantity=' + firstItem.quantity;
-                } else {
+                fetch('/checkout/api/create-orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: fullPhone,
+                        pickupTime: getPickupTimeIso()
+                    })
+                })
+                .then(function(response) {
+                    if (!response.ok) {
+                        return response.json().then(function(err) {
+                            throw new Error(err.error || 'Could not create order');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(function(order) {
+                    return fetch('/api/mpesa/stkpush', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            orderId: order.orderId,
+                            phone: fullPhone,
+                            amount: order.totalAmount
+                        })
+                    });
+                })
+                .then(function(response) {
+                    if (!response.ok) {
+                        return response.json().then(function(err) {
+                            throw new Error(err.error || 'STK Push initiation failed');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.ResponseCode === '0') {
+                        window.location.href = '/payment/status?checkoutRequestId=' + data.CheckoutRequestID;
+                    } else {
+                        throw new Error(data.ResponseDescription || 'STK Push failed');
+                    }
+                })
+                .catch(function(err) {
+                    errorMessage.textContent = err.message || 'Something went wrong. Please try again.';
                     paymentError.classList.add('show');
-                    errorMessage.textContent = 'No items in cart.';
-                }
+                    payBtn.disabled = false;
+                    payBtn.classList.remove('loading');
+                });
             });
-
         })();
     </script>
 

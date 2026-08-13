@@ -238,7 +238,6 @@
 
         <div th:if="${cart.items.isEmpty()}">
             <div class="empty-cart">
-                <span>🛒</span>
                 <p>Your cart is empty.</p>
                 <a href="/" class="btn-browse">Browse Our Menu</a>
             </div>
@@ -246,7 +245,7 @@
 
         <div th:if="!${cart.items.isEmpty()}">
             <div id="cartItems">
-                <div class="cart-item" th:each="item : ${cart.items}" data-id="${item.mealId}">
+                <div class="cart-item" th:each="item : ${cart.items}" th:data-id="${item.mealId}">
                     <div class="item-image">
                         <img th:src="${item.imageUrl}" alt="Meal" onerror="this.src='https://placehold.co/80x80/e0e0e0/666?text=Meal'">
                     </div>
@@ -256,11 +255,11 @@
                     </div>
                     <div class="item-price" th:text="'KSH ' + ${item.price}">KSH 1.00</div>
                     <div class="qty-control">
-                        <button class="qty-minus" data-id="${item.mealId}">−</button>
+                        <button class="qty-minus" th:data-id="${item.mealId}">−</button>
                         <span class="qty-num" th:text="${item.quantity}">1</span>
-                        <button class="qty-plus" data-id="${item.mealId}">+</button>
+                        <button class="qty-plus" th:data-id="${item.mealId}">+</button>
                     </div>
-                    <button class="btn-remove" data-id="${item.mealId}">✕</button>
+                    <button class="btn-remove" th:data-id="${item.mealId}">&times;</button>
                 </div>
             </div>
 
@@ -351,5 +350,6 @@
         });
     </script>
 
+    <script src="/js/order-tracker.js"></script>
 </body>
 </html>
