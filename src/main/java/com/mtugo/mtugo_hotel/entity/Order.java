@@ -14,14 +14,17 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Order {
 
+    // ===== Primary Key =====
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // ===== Meal Reference =====
     @ManyToOne
     @JoinColumn(name = "meal_id", nullable = false)
     private Meal meal;
 
+    // ===== Order Details =====
     @Column(nullable = false)
     private Integer quantity = 1;
 
@@ -31,10 +34,12 @@ public class Order {
     @Column(name = "customer_phone", nullable = false, length = 15)
     private String customerPhone;
 
+    // ===== Order Status =====
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status = OrderStatus.PENDING;
 
+    // ===== Timestamps =====
     @Column(name = "order_time")
     private LocalDateTime orderTime;
 
@@ -44,27 +49,30 @@ public class Order {
     @Column(name = "expected_ready_at")
     private LocalDateTime expectedReadyAt;
 
+    // ===== M-Pesa Integration =====
+    @Column(name = "checkout_request_id", length = 100)
+    private String checkoutRequestId;
+
+    // ===== Audit Fields =====
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "checkout_request_id", length = 100)
-    private String checkoutRequestId;
-
+    // ===== Lifecycle Callbacks =====
     @PrePersist
     protected void onCreate() {
-        orderTime = LocalDateTime.now();
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        if (totalAmount == null && meal != null) {
-            totalAmount = meal.getPrice() * quantity;
+        this.orderTime = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        if (this.totalAmount == null && this.meal != null) {
+            this.totalAmount = this.meal.getPrice() * this.quantity;
         }
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }

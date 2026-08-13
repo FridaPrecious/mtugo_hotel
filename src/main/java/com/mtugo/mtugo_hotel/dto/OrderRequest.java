@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -24,4 +26,10 @@ public class OrderRequest {
     @NotNull(message = "Phone number is required")
     @Pattern(regexp = "^(254[0-9]{9}|07[0-9]{8})$", message = "Phone must be in format 2547XXXXXXXX or 07XXXXXXXX")
     private String phone;
+
+    /**
+     * Optional. Customer's preferred pickup time. If omitted, the kitchen's
+     * standard prep-time estimate is used instead.
+     */
+    private LocalDateTime pickupTime;
 }

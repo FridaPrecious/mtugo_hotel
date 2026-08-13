@@ -12,8 +12,18 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    // Other methods if any...
-
     @Query("SELECT COUNT(o) FROM Order o WHERE o.status IN :statuses AND o.id != :excludeId")
     long countByStatusInAndIdNot(@Param("statuses") List<OrderStatus> statuses, @Param("excludeId") Long excludeId);
+
+    // Find all orders with status PAID, PREPARING, or READY, sorted by order time
+    List<Order> findByStatusInOrderByOrderTimeAsc(List<OrderStatus> statuses);
+
+    // Find all orders with status PAID (new orders waiting to be cooked)
+    List<Order> findByStatusOrderByOrderTimeAsc(OrderStatus status);
+
+    // Find all orders with status PREPARING (currently being cooked)
+    List<Order> findByStatusOrderByPaidAtAsc(OrderStatus status);
+
+    // Find all orders with status READY (awaiting pickup)
+    List<Order> findByStatusOrderByExpectedReadyAtAsc(OrderStatus status);
 }

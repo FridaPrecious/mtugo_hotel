@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mtugo Hotel - Checkout</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #faf8f5;
+            color: #2c2c2c;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .top-bar {
+            background: linear-gradient(135deg, #0b1a2e 0%, #1a2f3f 50%, #2a4a5a 100%);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-bar h1 { font-size: 1.4em; font-weight: 300; }
+        .top-bar h1 span { font-weight: 700; color: #d4af37; }
+        .top-bar a { color: #c9d4d9; text-decoration: none; font-size: 0.95em; }
+        .top-bar a:hover { color: white; text-decoration: underline; }
+
+        .container {
+            flex: 1;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 0 20px;
+            width: 100%;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+            padding: 36px 32px 32px;
+        }
+        .card h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #1a2f3f;
+            margin-bottom: 24px;
+            border-left: 5px solid #d4af37;
+            padding-left: 16px;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item .item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .cart-item .item-info img {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #f0ede8;
+        }
+        .cart-item .item-info .name { font-weight: 600; color: #0b1a2e; }
+        .cart-item .item-info .qty { color: #888; font-size: 0.9em; }
+        .cart-item .item-total { font-weight: 600; color: #d4af37; }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 1.05em;
+        }
+        .summary-row.total {
+            border-top: 2px solid #d4af37;
+            padding-top: 14px;
+            margin-top: 6px;
+            font-size: 1.2em;
+        }
+        .summary-row.total .value { color: #d4af37; font-size: 1.3em; }
+
+        .phone-section {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .phone-section label { display: block; font-weight: 600; margin-bottom: 6px; color: #333; }
+        .phone-section .hint { font-size: 0.8em; color: #888; margin-bottom: 10px; }
+
+        .phone-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #f7f9fc;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            padding: 4px 4px 4px 16px;
+            transition: border-color 0.3s;
+        }
+        .phone-input-wrapper:focus-within { border-color: #d4af37; }
+        .phone-input-wrapper .country-code { font-weight: 600; color: #555; white-space: nowrap; font-size: 0.95em; }
+        .phone-input-wrapper input {
+            flex: 1;
+            border: none;
+            padding: 14px 8px;
+            font-size: 1em;
+            background: transparent;
+            outline: none;
+            color: #1a1a2e;
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+        .phone-input-wrapper input::placeholder {
+            color: #bbb;
+            font-family: 'Segoe UI', sans-serif;
+            letter-spacing: 0;
+        }
+        .phone-error { color: #cc5555; font-size: 0.85em; margin-top: 6px; display: none; }
+        .phone-error.show { display: block; }
+
+        .pay-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: #d4af37;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+            text-align: center;
+            margin-top: 20px;
+            position: relative;
+        }
+        .pay-btn:hover:not(:disabled) { background: #c4a030; transform: scale(1.01); }
+        .pay-btn:disabled { background: #999; cursor: not-allowed; transform: none; }
+        .pay-btn .spinner {
+            display: none;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+        .pay-btn.loading .spinner { display: block; }
+        .pay-btn.loading .btn-text { display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .payment-error {
+            background: #fff0f0;
+            border-left: 4px solid #cc5555;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-top: 16px;
+            display: none;
+            color: #aa3333;
+            font-size: 0.95em;
+        }
+        .payment-error.show { display: block; }
+
+        .btn-back {
+            display: inline-block;
+            margin-top: 16px;
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+        .btn-back:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            .container { margin: 20px auto; }
+            .card { padding: 24px 18px; border-radius: 16px; }
+            .cart-item { flex-wrap: wrap; gap: 8px; }
+            .cart-item .item-info { width: 100%; }
+            .cart-item .item-total { margin-left: auto; }
+            .phone-input-wrapper { padding: 2px 2px 2px 12px; }
+            .phone-input-wrapper input { padding: 12px 6px; font-size: 0.9em; }
+        }
+        @media (max-width: 400px) {
+            .container { padding: 0 12px; }
+            .card { padding: 18px 14px; }
+            .phone-input-wrapper {
+                flex-wrap: wrap;
+                padding: 0;
+                border: none;
+                background: transparent;
+                gap: 6px;
+            }
+            .phone-input-wrapper .country-code {
+                background: #f7f9fc;
+                padding: 10px 14px;
+                border-radius: 10px;
+                border: 2px solid #e0e0e0;
+                width: 100%;
+            }
+            .phone-input-wrapper input {
+                border: 2px solid #e0e0e0;
+                border-radius: 10px;
+                padding: 12px 14px;
+                background: #f7f9fc;
+                width: 100%;
+                text-align: center;
+            }
+            .phone-input-wrapper input:focus { border-color: #d4af37; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="top-bar">
+        <h1>Mtugo <span>Hotel</span></h1>
+        <a href="/cart">← Back to Cart</a>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Checkout</h2>
+
+            <!-- Cart Items -->
+            <div th:if="${cart.items.isEmpty()}">
+                <p>Your cart is empty.</p>
+                <a href="/" class="btn-back">Browse Menu</a>
+            </div>
+
+            <div th:if="!${cart.items.isEmpty()}">
+                <div th:each="item : ${cart.items}" class="cart-item">
+                    <div class="item-info">
+                        <img th:src="${item.imageUrl}" alt="Meal" onerror="this.src='https://placehold.co/50x50/e0e0e0/666?text=Meal'">
+                        <div>
+                            <div class="name" th:text="${item.name}">Meal</div>
+                            <div class="qty">x <span th:text="${item.quantity}">1</span></div>
+                        </div>
+                    </div>
+                    <div class="item-total">KSH <span th:text="${item.subtotal}">1.00</span></div>
+                </div>
+
+                <div class="summary-row total">
+                    <span class="label">Total</span>
+                    <span class="value">KSH <span th:text="${cart.totalAmount}">0.00</span></span>
+                </div>
+
+                <!-- Phone Input -->
+                <div class="phone-section">
+                    <label for="phoneInput">M-Pesa Phone Number</label>
+                    <div class="hint">Enter the phone number registered with M-Pesa</div>
+
+                    <div class="phone-input-wrapper">
+                        <span class="country-code">+254</span>
+                        <input type="tel"
+                               id="phoneInput"
+                               placeholder="7XX XXX XXX"
+                               maxlength="9"
+                               autocomplete="tel"
+                               inputmode="numeric">
+                    </div>
+
+                    <div class="phone-error" id="phoneError">
+                        Please enter a valid phone number (e.g., 712345678 or 0712345678)
+                    </div>
+                </div>
+
+                <!-- Pay Button -->
+                <button class="pay-btn" id="payBtn">
+                    <span class="btn-text">Pay Now with M-Pesa</span>
+                    <span class="spinner"></span>
+                </button>
+
+                <!-- Payment Error -->
+                <div class="payment-error" id="paymentError">
+                    <strong>Payment failed:</strong> <span id="errorMessage">Please try again.</span>
+                </div>
+            </div>
+
+            <a href="/cart" class="btn-back">← Back to Cart</a>
+        </div>
+    </main>
+
+    <script th:inline="javascript">
+        (function() {
+            // Pass cart data from Thymeleaf to JavaScript
+            var cart = /*[[${cart}]]*/ null;
+
+            var phoneInput = document.getElementById('phoneInput');
+            var phoneError = document.getElementById('phoneError');
+            var payBtn = document.getElementById('payBtn');
+            var paymentError = document.getElementById('paymentError');
+            var errorMessage = document.getElementById('errorMessage');
+
+            function formatPhone(value) {
+                var cleaned = value.replace(/\D/g, '');
+                if (cleaned.length > 9) cleaned = cleaned.substring(0, 9);
+                if (cleaned.length > 6) {
+                    return cleaned.substring(0, 3) + ' ' + cleaned.substring(3, 6) + ' ' + cleaned.substring(6);
+                } else if (cleaned.length > 3) {
+                    return cleaned.substring(0, 3) + ' ' + cleaned.substring(3);
+                }
+                return cleaned;
+            }
+
+            function getRawPhone(value) {
+                return value.replace(/\s/g, '');
+            }
+
+            function validatePhone(raw) {
+                return (raw.length === 9 && raw.startsWith('7')) ||
+                       (raw.length === 10 && raw.startsWith('07'));
+            }
+
+            function getFullPhone(raw) {
+                if (raw.length === 9 && raw.startsWith('7')) {
+                    return '254' + raw;
+                }
+                if (raw.length === 10 && raw.startsWith('07')) {
+                    return '254' + raw.substring(1);
+                }
+                return null;
+            }
+
+            phoneInput.addEventListener('input', function() {
+                var raw = getRawPhone(this.value);
+                var formatted = formatPhone(raw);
+                this.value = formatted;
+                if (raw.length > 0 && !validatePhone(raw)) {
+                    phoneError.classList.add('show');
+                } else {
+                    phoneError.classList.remove('show');
+                }
+                updatePayButton();
+            });
+
+            function updatePayButton() {
+                var raw = getRawPhone(phoneInput.value);
+                payBtn.disabled = !validatePhone(raw);
+            }
+
+            updatePayButton();
+
+            // Pay button click
+            payBtn.addEventListener('click', function() {
+                var raw = getRawPhone(phoneInput.value);
+                if (!validatePhone(raw)) {
+                    phoneError.classList.add('show');
+                    return;
+                }
+                var fullPhone = getFullPhone(raw);
+                if (!fullPhone) {
+                    phoneError.classList.add('show');
+                    return;
+                }
+
+                // Check if cart has items
+                if (!cart || !cart.items || cart.items.length === 0) {
+                    paymentError.classList.add('show');
+                    errorMessage.textContent = 'Cart is empty.';
+                    return;
+                }
+
+                // For now, we redirect to the single-order page with the first item
+                // This is a temporary solution until we implement full cart checkout
+                var firstItem = cart.items[0];
+                if (firstItem) {
+                    window.location.href = '/order?mealId=' + firstItem.mealId + '&quantity=' + firstItem.quantity;
+                } else {
+                    paymentError.classList.add('show');
+                    errorMessage.textContent = 'No items in cart.';
+                }
+            });
+
+        })();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mtugo Hotel - Payment Failed</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #faf8f5;
+            color: #2c2c2c;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            background: linear-gradient(135deg, #0b1a2e 0%, #1a2f3f 50%, #2a4a5a 100%);
+            color: white;
+            padding: 16px 24px;
+        }
+
+        .top-bar h1 { font-size: 1.4em; font-weight: 300; }
+        .top-bar h1 span { font-weight: 700; color: #d4af37; }
+
+        .container {
+            flex: 1;
+            max-width: 480px;
+            margin: 40px auto;
+            padding: 0 20px;
+            width: 100%;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+
+        .icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #c0392b;
+            color: white;
+            font-size: 2em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        h2 { margin-bottom: 8px; }
+        .subtitle { color: #666; margin-bottom: 24px; }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 6px;
+        }
+
+        .btn-primary { background: #d4af37; color: #1a1a1a; }
+        .btn-secondary { background: #f0f0f0; color: #2c2c2c; }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <h1>Mtugo <span>Hotel</span></h1>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="icon">&#10007;</div>
+            <h2>Payment Failed</h2>
+            <p class="subtitle">Your order could not be paid for. No charge was made.</p>
+            <p style="margin-bottom:24px;">Order # <strong th:text="${order.id}">1</strong></p>
+
+            <a class="btn btn-primary" th:href="@{'/order?mealId=' + ${order.meal.id} + '&quantity=' + ${order.quantity}}">Try Again</a>
+            <a class="btn btn-secondary" href="/">Back to Menu</a>
+        </div>
+    </div>
+</body>
+</html>

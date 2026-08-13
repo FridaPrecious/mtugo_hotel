@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mtugo Hotel - Payment Status</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #faf8f5;
+            color: #2c2c2c;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+            padding: 40px 32px;
+            text-align: center;
+        }
+        .card h2 {
+            font-size: 1.5em;
+            color: #1a2f3f;
+            margin-bottom: 20px;
+        }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #d4af37;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status-text {
+            font-size: 1.1em;
+            color: #666;
+            margin: 16px 0;
+        }
+        .status-text .highlight {
+            color: #d4af37;
+            font-weight: 600;
+        }
+        .result {
+            display: none;
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        .result.success {
+            display: block;
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+        }
+        .result.failed {
+            display: block;
+            background: #ffebee;
+            border: 1px solid #e53935;
+        }
+        .result .icon {
+            font-size: 2.5em;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .result .icon.success-icon {
+            color: #2e7d32;
+        }
+        .result .icon.failed-icon {
+            color: #c62828;
+        }
+        .result h3 {
+            margin-bottom: 4px;
+        }
+        .result p {
+            color: #555;
+            font-size: 0.95em;
+        }
+        .btn {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 10px 30px;
+            background: #d4af37;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #c4a030;
+        }
+        .btn.secondary {
+            background: #1a2f3f;
+        }
+        .btn.secondary:hover {
+            background: #0b1a2e;
+        }
+        .hidden {
+            display: none;
+        }
+        .order-details {
+            margin-top: 16px;
+            padding: 12px;
+            background: #f7f9fc;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #555;
+            text-align: left;
+        }
+        .order-details p {
+            margin: 4px 0;
+        }
+        .order-details strong {
+            color: #1a2f3f;
+        }
+        .order-details .separator {
+            border-top: 1px solid #e0e0e0;
+            margin: 8px 0;
+        }
+        #resultActions {
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <h2>Payment Status</h2>
+
+            <!-- Loading State -->
+            <div id="loadingState">
+                <div class="spinner"></div>
+                <p class="status-text">
+                    Processing your payment...<br>
+                    <span class="highlight">Please check your phone and enter your M-Pesa PIN.</span>
+                </p>
+                <p style="font-size:0.85em; color:#999; margin-top:8px;">
+                    Transaction ID: <span th:text="${checkoutRequestId}" id="checkoutRequestId">12345</span>
+                </p>
+            </div>
+
+            <!-- Result State (hidden initially) -->
+            <div id="resultState" class="result">
+                <div class="icon" id="resultIcon">+</div>
+                <h3 id="resultTitle">Payment Successful</h3>
+                <p id="resultMessage">Your payment has been confirmed.</p>
+                <div class="order-details" id="orderDetails">
+                    <p>Order #: <strong id="orderId">-</strong></p>
+                    <p>Meal: <strong id="mealName">-</strong></p>
+                    <p>Amount: <strong id="amount">KSH 0.00</strong></p>
+                    <p id="receiptInfo"></p>
+                    <p id="etaInfo"></p>
+                </div>
+                <div id="resultActions">
+                    <a href="/" class="btn secondary">Back to Menu</a>
+                    <button class="btn" id="viewOrderBtn" style="display:none;">View Order</button>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" style="display:none;">
+                <div style="font-size:2.5em; font-weight:bold; color:#c62828;">!</div>
+                <h3 style="margin-top:12px;">Something went wrong</h3>
+                <p style="color:#666;" id="errorMessage">Please try again.</p>
+                <a href="/" class="btn secondary" style="margin-top:16px;">Back to Menu</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const checkoutRequestId = document.getElementById('checkoutRequestId').textContent.trim();
+            const loadingState = document.getElementById('loadingState');
+            const resultState = document.getElementById('resultState');
+            const errorState = document.getElementById('errorState');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+            const orderId = document.getElementById('orderId');
+            const mealName = document.getElementById('mealName');
+            const amount = document.getElementById('amount');
+            const receiptInfo = document.getElementById('receiptInfo');
+            const etaInfo = document.getElementById('etaInfo');
+            const errorMessage = document.getElementById('errorMessage');
+
+            let attempts = 0;
+            const maxAttempts = 30; // 30 * 3 seconds = 90 seconds max
+
+            function checkStatus() {
+                attempts++;
+                fetch('/api/payment/status?checkoutRequestId=' + checkoutRequestId)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.status === 'COMPLETED') {
+                            showSuccess(data);
+                        } else if (data.status === 'FAILED') {
+                            showFailure(data);
+                        } else if (attempts < maxAttempts) {
+                            // Still waiting, continue polling
+                            setTimeout(checkStatus, 3000);
+                        } else {
+                            // Timeout
+                            showError('Payment is taking longer than expected. Please check your M-Pesa messages or contact support.');
+                        }
+                    })
+                    .catch(err => {
+                        if (attempts < maxAttempts) {
+                            setTimeout(checkStatus, 3000);
+                        } else {
+                            showError('Could not connect to server. Please refresh the page.');
+                        }
+                    });
+            }
+
+            function showSuccess(data) {
+                loadingState.style.display = 'none';
+                resultState.className = 'result success';
+                resultIcon.textContent = '+';
+                resultIcon.className = 'icon success-icon';
+                resultTitle.textContent = 'Payment Successful';
+                resultMessage.textContent = data.message || 'Your payment has been confirmed.';
+                orderId.textContent = data.orderId || '-';
+                mealName.textContent = data.mealName || '-';
+                amount.textContent = 'KSH ' + (data.totalAmount || '0.00');
+                if (data.mpesaReceiptNumber) {
+                    receiptInfo.textContent = 'M-Pesa Receipt: ' + data.mpesaReceiptNumber;
+                }
+                if (data.expectedReadyAt) {
+                    const eta = new Date(data.expectedReadyAt);
+                    etaInfo.textContent = 'Estimated Ready Time: ' + eta.toLocaleTimeString();
+                }
+                document.getElementById('viewOrderBtn').style.display = 'inline-block';
+                document.getElementById('viewOrderBtn').onclick = function() {
+                    window.location.href = '/payment/success?orderId=' + data.orderId;
+                };
+                // Auto-redirect to success page after 5 seconds
+                setTimeout(function() {
+                    window.location.href = '/payment/success?orderId=' + data.orderId;
+                }, 5000);
+            }
+
+            function showFailure(data) {
+                loadingState.style.display = 'none';
+                resultState.className = 'result failed';
+                resultIcon.textContent = 'x';
+                resultIcon.className = 'icon failed-icon';
+                resultTitle.textContent = 'Payment Failed';
+                resultMessage.textContent = data.message || 'Your payment could not be processed.';
+                document.getElementById('resultActions').innerHTML = `
+                    <a href="/" class="btn secondary">Back to Menu</a>
+                    <a href="/order?mealId=` + data.orderId + `&quantity=1" class="btn">Try Again</a>
+                `;
+            }
+
+            function showError(message) {
+                loadingState.style.display = 'none';
+                errorState.style.display = 'block';
+                errorMessage.textContent = message;
+            }
+
+            // Start polling
+            setTimeout(checkStatus, 3000);
+        })();
+    </script>
+
+</body>
+</html>

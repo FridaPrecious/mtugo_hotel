@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mtugo Hotel - Payment Successful</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #faf8f5;
+            color: #2c2c2c;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            background: linear-gradient(135deg, #0b1a2e 0%, #1a2f3f 50%, #2a4a5a 100%);
+            color: white;
+            padding: 16px 24px;
+        }
+
+        .top-bar h1 { font-size: 1.4em; font-weight: 300; }
+        .top-bar h1 span { font-weight: 700; color: #d4af37; }
+
+        .container {
+            flex: 1;
+            max-width: 520px;
+            margin: 40px auto;
+            padding: 0 20px;
+            width: 100%;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+
+        .icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #2e7d4f;
+            color: white;
+            font-size: 2em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        h2 { margin-bottom: 8px; }
+        .subtitle { color: #666; margin-bottom: 24px; }
+
+        .details {
+            text-align: left;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            padding: 16px 0;
+            margin-bottom: 24px;
+        }
+
+        .details p { display: flex; justify-content: space-between; margin: 8px 0; }
+        .details span:first-child { color: #666; }
+        .details span:last-child { font-weight: 600; }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 6px;
+        }
+
+        .btn-primary { background: #d4af37; color: #1a1a1a; }
+        .btn-secondary { background: #f0f0f0; color: #2c2c2c; }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <h1>Mtugo <span>Hotel</span></h1>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="icon">&#10003;</div>
+            <h2>Payment Successful</h2>
+            <p class="subtitle">Your order has been confirmed and is on its way to the kitchen.</p>
+
+            <div id="statusBanner" style="background:#fff8e6; border-left:4px solid #d4af37; border-radius:8px; padding:14px 18px; margin-bottom:20px; text-align:left; font-weight:600; color:#8a6d1a;">
+                Preparing your order...
+            </div>
+
+            <div class="details">
+                <p><span>Order #</span><span th:text="${order.id}">1</span></p>
+                <p><span>Meal</span><span th:text="${meal.name}">Meal</span></p>
+                <p><span>Quantity</span><span th:text="${order.quantity}">1</span></p>
+                <p><span>Total Paid</span><span th:text="'KSH ' + ${order.totalAmount}">KSH 1.00</span></p>
+                <p th:if="${order.expectedReadyAt}">
+                    <span>Estimated Ready</span>
+                    <span th:text="${#temporals.format(order.expectedReadyAt, 'HH:mm')}">--:--</span>
+                </p>
+            </div>
+
+            <a class="btn btn-primary" th:href="@{'/receipt/' + ${order.id}}">Download Receipt</a>
+            <a class="btn btn-secondary" href="/">Back to Menu</a>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        (function() {
+            const orderId = /*[[${order.id}]]*/ 1;
+            const banner = document.getElementById('statusBanner');
+            let pollTimer = null;
+
+            const STAGES = {
+                PAID: { text: 'Preparing your order...', bg: '#fff8e6', border: '#d4af37', color: '#8a6d1a' },
+                PREPARING: { text: '👨‍🍳 Your order is being cooked...', bg: '#fff8e6', border: '#d4af37', color: '#8a6d1a' },
+                READY: { text: '✅ Your order is ready for pickup!', bg: '#e9f7ee', border: '#2e7d4f', color: '#1e5c37' },
+                COMPLETED: { text: '🎉 Order collected. Thank you!', bg: '#eef3f7', border: '#2a4a5a', color: '#1a2f3f' }
+            };
+
+            function applyStage(status) {
+                const stage = STAGES[status];
+                if (!stage) return;
+                banner.textContent = stage.text;
+                banner.style.background = stage.bg;
+                banner.style.borderLeftColor = stage.border;
+                banner.style.color = stage.color;
+
+                if (status === 'READY' && Notification && Notification.permission === 'granted') {
+                    new Notification('Mtugo Hotel', { body: 'Your order is ready for pickup!' });
+                }
+            }
+
+            async function pollStatus() {
+                try {
+                    const res = await fetch('/api/orders/' + orderId + '/status');
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    applyStage(data.status);
+
+                    if (data.status === 'READY' || data.status === 'COMPLETED') {
+                        clearInterval(pollTimer);
+                    }
+                } catch (err) {
+                    console.error('Status poll failed', err);
+                }
+            }
+
+            if (window.Notification && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            pollStatus();
+            pollTimer = setInterval(pollStatus, 8000);
+        })();
+    </script>
+</body>
+</html>
