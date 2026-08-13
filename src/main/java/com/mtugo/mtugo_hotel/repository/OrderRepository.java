@@ -26,4 +26,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Find all orders with status READY (awaiting pickup)
     List<Order> findByStatusOrderByExpectedReadyAtAsc(OrderStatus status);
+
+    // Find all orders created together from one cart checkout
+    List<Order> findByCartGroupId(String cartGroupId);
 }

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -107,6 +108,7 @@ public class PaymentStatusController {
         response.put("orderId", order.getId());
         response.put("status", order.getStatus().name());
         response.put("mealName", order.getMeal().getName());
+        response.put("quantity", order.getQuantity());
         response.put("expectedReadyAt", order.getExpectedReadyAt());
 
         return ResponseEntity.ok(response);
@@ -119,8 +121,13 @@ public class PaymentStatusController {
     public String paymentSuccess(@RequestParam("orderId") Long orderId, Model model) {
         log.info("Payment success page requested for orderId: {}", orderId);
         Order order = orderService.findOrderById(orderId);
+        List<Order> group = orderService.findGroupIncludingSelf(order);
+        double groupTotal = group.stream().mapToDouble(Order::getTotalAmount).sum();
+
         model.addAttribute("order", order);
         model.addAttribute("meal", order.getMeal());
+        model.addAttribute("orderGroup", group);
+        model.addAttribute("groupTotal", groupTotal);
         return "payment-success";
     }
 

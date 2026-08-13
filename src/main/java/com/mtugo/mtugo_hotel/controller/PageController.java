@@ -54,6 +54,11 @@ public class PageController {
         return "staff-dashboard";
     }
 
+    @GetMapping("/track")
+    public String trackOrderPage() {
+        return "track-order";
+    }
+
     @SuppressWarnings("unchecked")
     private List<CartItemDTO> getCartFromSession(HttpSession session) {
         List<CartItemDTO> items = (List<CartItemDTO>) session.getAttribute(SESSION_CART_KEY);

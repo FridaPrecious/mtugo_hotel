@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 public class ReceiptService {
@@ -25,23 +26,32 @@ public class ReceiptService {
 
     /**
      * Builds a plain-text receipt for a paid order, suitable for direct
-     * download (Content-Disposition: attachment).
+     * download (Content-Disposition: attachment). Covers every item in the
+     * same cart checkout, not just the one order that anchored the payment.
      */
     public String generateReceiptText(Long orderId) {
         Order order = orderService.findOrderById(orderId);
+        List<Order> group = orderService.findGroupIncludingSelf(order);
 
         Transaction transaction = transactionRepository.findTopByOrder_IdOrderByIdDesc(orderId)
                 .orElse(null);
+
+        double total = group.stream().mapToDouble(Order::getTotalAmount).sum();
 
         StringBuilder sb = new StringBuilder();
         sb.append("================================\n");
         sb.append("        MTUGO HOTEL\n");
         sb.append("     Payment Receipt\n");
         sb.append("================================\n\n");
-        sb.append("Order #        : ").append(order.getId()).append("\n");
-        sb.append("Meal           : ").append(order.getMeal().getName()).append("\n");
-        sb.append("Quantity       : ").append(order.getQuantity()).append("\n");
-        sb.append("Total Paid     : KSH ").append(String.format("%.2f", order.getTotalAmount())).append("\n");
+        sb.append("Order #        : ").append(order.getId()).append("\n\n");
+
+        for (Order item : group) {
+            sb.append(String.format("%-20s x%-3d KSH %.2f%n",
+                    item.getMeal().getName(), item.getQuantity(), item.getTotalAmount()));
+        }
+
+        sb.append("\n--------------------------------\n");
+        sb.append("Total Paid     : KSH ").append(String.format("%.2f", total)).append("\n");
         sb.append("Phone Number   : ").append(order.getCustomerPhone()).append("\n");
         sb.append("Status         : ").append(order.getStatus()).append("\n");
 
