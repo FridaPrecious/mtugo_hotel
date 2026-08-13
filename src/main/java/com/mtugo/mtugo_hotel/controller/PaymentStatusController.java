@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -91,6 +92,24 @@ public class PaymentStatusController {
             response.put("message", "Error checking payment status: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
+    }
+
+    /**
+     * Lightweight polling endpoint for the customer-facing success page,
+     * so customers can see live status once staff move the order along.
+     */
+    @GetMapping("/api/orders/{orderId}/status")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getOrderStatus(@PathVariable Long orderId) {
+        Order order = orderService.findOrderById(orderId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("orderId", order.getId());
+        response.put("status", order.getStatus().name());
+        response.put("mealName", order.getMeal().getName());
+        response.put("expectedReadyAt", order.getExpectedReadyAt());
+
+        return ResponseEntity.ok(response);
     }
 
     /**
