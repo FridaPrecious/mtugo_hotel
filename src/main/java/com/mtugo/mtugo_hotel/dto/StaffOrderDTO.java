@@ -22,6 +22,7 @@ public class StaffOrderDTO {
     private LocalDateTime orderTime;
     private LocalDateTime paidAt;
     private LocalDateTime expectedReadyAt;
+    private LocalDateTime requestedPickupTime;
     private Long elapsedMinutes;
     private Long waitTimeMinutes;
 }

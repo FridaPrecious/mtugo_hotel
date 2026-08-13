@@ -84,6 +84,7 @@ public class StaffService {
                 .orderTime(order.getOrderTime())
                 .paidAt(order.getPaidAt())
                 .expectedReadyAt(order.getExpectedReadyAt())
+                .requestedPickupTime(order.getRequestedPickupTime())
                 .elapsedMinutes(elapsedMinutes)
                 .waitTimeMinutes(waitTimeMinutes)
                 .build();
